@@ -2,16 +2,19 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Admin | Upload Movies</title>
+  <title>Admin | StreamFlix</title>
   <link rel="stylesheet" href="css/admin.css">
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 </head>
 <body>
-
 <h1>Admin Upload Panel</h1>
 
 <div id="login">
-  <input type="password" id="password" placeholder="Admin password">
-  <button onclick="login()">Login</button>
+  <input type="email" id="email" placeholder="Admin email">
+  <input type="password" id="password" placeholder="Password">
+  <button onclick="adminLogin()">Login</button>
 </div>
 
 <div id="panel" class="hidden">
