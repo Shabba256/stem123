@@ -1,0 +1,47 @@
+body {
+  margin: 0;
+  background: #000;
+  color: #fff;
+  font-family: Arial, sans-serif;
+}
+
+header {
+  padding: 20px;
+  font-size: 28px;
+  font-weight: bold;
+  color: #e50914;
+}
+
+.row {
+  padding: 20px;
+}
+
+.row h2 {
+  margin-bottom: 10px;
+}
+
+.list {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+}
+
+.card {
+  min-width: 220px;
+  transition: transform 0.3s;
+}
+
+.card:hover {
+  transform: scale(1.08);
+}
+
+video {
+  width: 100%;
+  border-radius: 6px;
+}
+
+a {
+  color: #e50914;
+  text-decoration: none;
+  font-size: 14px;
+}

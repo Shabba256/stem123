@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin | Upload Movies</title>
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+<h1>Admin Upload Panel</h1>
+
+<div id="login">
+  <input type="password" id="password" placeholder="Admin password">
+  <button onclick="login()">Login</button>
+</div>
+
+<div id="panel" class="hidden">
+  <input type="file" id="videoFile" accept="video/*">
+  <input type="text" id="title" placeholder="Movie title">
+  <input type="text" id="category" placeholder="Category (Movies, Series)">
+  <button onclick="uploadVideo()">Upload</button>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>
