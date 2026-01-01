@@ -1,3 +1,3 @@
-const CLOUD_NAME = "YOUR_CLOUD_NAME";
-const UPLOAD_PRESET = "YOUR_UNSIGNED_UPLOAD_PRESET";
+const CLOUD_NAME = "dagxhzebg";
+const UPLOAD_PRESET = "cornflakes_upload";
 const ADMIN_PASSWORD = "admin123";
