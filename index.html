@@ -3,25 +3,46 @@
 <head>
   <meta charset="UTF-8">
   <title>StreamFlix</title>
+
+  <!-- ============================== -->
+  <!-- STYLES -->
+  <!-- ============================== -->
   <link rel="stylesheet" href="css/client.css">
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+  <!-- ============================== -->
+  <!-- FIREBASE SDKs -->
+  <!-- ============================== -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 </head>
-<body>
-<header>StreamFlix</header>
-<section id="hero">
-  <div class="hero-overlay">
-    <h1 id="hero-title">Featured</h1>
-    <p id="hero-desc">Watch now</p>
-    <button id="play-btn">▶ Play</button>
-  </div>
-</section>
-<div id="content"></div>
 
-<script src="js/config.js"></script>
-<script src="js/client.js"></script>
+<body>
+  <!-- ============================== -->
+  <!-- HEADER -->
+  <!-- ============================== -->
+  <header>StreamFlix</header>
+
+  <!-- ============================== -->
+  <!-- HERO SECTION (FEATURED MOVIE) -->
+  <!-- ============================== -->
+  <section id="hero">
+    <div class="hero-overlay">
+      <h1 id="hero-title">Featured Movie</h1>
+      <p id="hero-desc">Watch the latest featured movie</p>
+      <button id="play-btn">▶ Play</button>
+    </div>
+  </section>
+
+  <!-- ============================== -->
+  <!-- MOVIE LISTINGS -->
+  <!-- ============================== -->
+  <div id="content"></div>
+
+  <!-- ============================== -->
+  <!-- SCRIPTS -->
+  <!-- ============================== -->
+  <script src="js/config.js"></script>
+  <script src="js/client.js"></script>
 </body>
 </html>

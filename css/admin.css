@@ -1,67 +1,174 @@
+/* ============================= */
+/* GLOBAL STYLES                  */
+/* ============================= */
 body {
+  margin: 0;
+  font-family: Arial, sans-serif;
   background: #000;
   color: #fff;
-  font-family: Arial, sans-serif;
-  padding: 40px;
+  padding: 20px;
 }
 
-input, button {
-  width: 100%;
-  padding: 12px;
-  margin: 10px 0;
-}
-
-button {
-  background: #e50914;
-  border: none;
-  color: white;
-  cursor: pointer;
+h1, h2 {
+  color: #e50914;
 }
 
 .hidden {
   display: none;
 }
-.admin-movie {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  margin-bottom: 10px;
+
+/* ============================= */
+/* LOGIN PANEL                    */
+/* ============================= */
+#login input {
+  display: block;
+  margin: 8px 0;
+  padding: 10px;
+  width: 250px;
+  border-radius: 4px;
+  border: 1px solid #333;
+  background: #111;
+  color: #fff;
 }
 
-.admin-movie button {
+#login button {
+  padding: 10px 20px;
+  background: #e50914;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+#login button:hover {
+  background: #b20710;
+}
+
+/* ============================= */
+/* UPLOAD PANEL                   */
+/* ============================= */
+#panel input, #panel textarea {
+  display: block;
+  width: 300px;
+  margin: 5px 0;
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #333;
+  background: #111;
+  color: #fff;
+}
+
+#panel textarea {
+  height: 60px;
+  resize: vertical;
+}
+
+.featured-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 6px 0;
+}
+
+#panel button {
+  margin-top: 10px;
+  padding: 8px 16px;
   background: #e50914;
   border: none;
-  color: #fff;
-  padding: 4px 10px;
+  border-radius: 4px;
   cursor: pointer;
 }
 
-/* ============================= */
-/* UPLOAD PROGRESS BAR           */
-/* ============================= */
+#panel button:hover {
+  background: #b20710;
+}
 
+/* ============================= */
+/* PROGRESS BAR                   */
+/* ============================= */
 #progress-container {
-  width: 100%;
-  background: #333;
-  height: 10px;
-  border-radius: 5px;
+  width: 300px;
+  height: 20px;
+  background: #222;
+  border-radius: 4px;
   margin-top: 10px;
   overflow: hidden;
 }
 
 #progress-bar {
-  width: 0%;
   height: 100%;
   background: #e50914;
-  transition: width 0.2s ease;
+  width: 0%;
+  transition: width 0.3s ease;
 }
 
 #progress-text {
-  font-size: 13px;
-  margin-top: 6px;
-  color: #aaa;
+  margin-top: 4px;
+  font-size: 14px;
 }
 
-.hidden {
+/* ============================= */
+/* ADMIN MOVIE LIST               */
+/* ============================= */
+.admin-movie {
+  background: #111;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+  border: 1px solid #333;
+}
+
+/* HEADER SECTION (Always Visible) */
+.movie-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
+
+.header-actions button,
+.header-actions label {
+  margin-left: 8px;
+}
+
+/* DETAILS SECTION (Collapsible) */
+.movie-details {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.movie-details.hidden {
   display: none;
+}
+
+.movie-details input,
+.movie-details textarea {
+  padding: 6px;
+  border-radius: 4px;
+  border: 1px solid #333;
+  background: #111;
+  color: #fff;
+}
+
+.movie-details button {
+  width: fit-content;
+  padding: 6px 12px;
+  background: #e50914;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.movie-details button:hover {
+  background: #b20710;
+}
+
+/* ANALYTICS */
+.analytics {
+  display: flex;
+  gap: 12px;
+  font-size: 13px;
+  margin-top: 4px;
 }
