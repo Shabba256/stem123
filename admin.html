@@ -1,33 +1,62 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Admin | StreamFlix</title>
-  <link rel="stylesheet" href="css/admin.css">
+
+  <link rel="stylesheet" href="css/admin.css" />
+
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 </head>
+
 <body>
-<h1>Admin Upload Panel</h1>
 
-<div id="login">
-  <input type="email" id="email" placeholder="Admin email">
-  <input type="password" id="password" placeholder="Password">
-  <button onclick="adminLogin()">Login</button>
-</div>
+  <h1>🎬 StreamFlix Admin Panel</h1>
 
-<div id="panel" class="hidden">
-  <input type="file" id="videoFile" accept="video/*">
-  <input type="text" id="title" placeholder="Movie title">
-  <input type="text" id="category" placeholder="Category (Movies, Series)">
-  <button onclick="uploadVideo()">Upload</button>
-</div>
+  <!-- LOGIN -->
+  <div id="login">
+    <input type="email" id="email" placeholder="Admin email" />
+    <input type="password" id="password" placeholder="Password" />
+    <button onclick="adminLogin()">Login</button>
+  </div>
 
-<script src="js/config.js"></script>
-<script src="js/admin.js"></script>
+  <!-- ADMIN PANEL -->
+  <div id="panel" class="hidden">
+
+    <h2>Upload Movie</h2>
+
+    <input type="file" id="videoFile" accept="video/*" />
+
+    <input type="text" id="title" placeholder="Movie title" />
+
+    <input type="text" id="category" placeholder="Category (Movies, Series, Music)" />
+
+    <textarea id="description" placeholder="Movie description"></textarea>
+
+    <!-- FEATURED TOGGLE -->
+    <label class="featured-toggle">
+      <input type="checkbox" id="featured" />
+      <span>Set as Featured (Hero Banner)</span>
+    </label>
+
+    <button onclick="uploadVideo()">Upload</button>
+    <div id="progress-container" class="hidden">
+      <div id="progress-bar"></div>
+    </div>
+    <p id="progress-text"></p>
+
+    <hr>
+    <h2>Uploaded Movies</h2>
+    <div id="movieList"></div>
+
+  </div>
+
+  <!-- SCRIPTS -->
+  <script src="js/config.js"></script>
+  <script src="js/admin.js"></script>
+
 </body>
 </html>
