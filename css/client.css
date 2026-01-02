@@ -84,6 +84,17 @@ header {
   opacity: 1;
 }
 
+.card img {
+  width: 100%;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.card img:hover {
+  transform: scale(1.03);
+}
+
 video {
   width: 100%;
   border-radius: 6px;
