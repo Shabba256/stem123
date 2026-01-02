@@ -201,10 +201,13 @@ video {
 
   /* 🔑 On mobile, always show Play/Download */
   .card-buttons {
-    opacity: 1;
-    pointer-events: auto;
-    top: auto;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    position: absolute;
     bottom: 10px;
+    top: auto;
+    left: 50%;
     transform: translateX(-50%);
   }
 }
+
