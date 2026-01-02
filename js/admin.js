@@ -51,8 +51,10 @@ function uploadVideo() {
       title,
       category,
       url: result.secure_url,
+      description: "Watch the latest release now",
+      featured: true,
       timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    })
+  })
     .then(() => alert("Upload successful!"))
     .catch(err => alert("Firestore error: " + err));
   })
