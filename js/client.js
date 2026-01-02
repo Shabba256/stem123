@@ -64,9 +64,11 @@ db.collection("movies")
               src="${thumbUrl}" 
               alt="${movie.title}" 
               loading="lazy"
-              onclick="window.open('${movie.url}', '_blank')"
             />
-            <a href="${movie.url}" download>Download</a>
+            <div class="card-buttons">
+              <button class="play-btn" onclick="window.open('${movie.url}', '_blank')">Play</button>
+              <a class="download-btn" href="${movie.url}" download>Download</a>
+            </div>
           </div>
         `;
       });
