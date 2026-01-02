@@ -18,8 +18,8 @@ db.collection("movies")
 
       grouped[category].forEach(movie => {
         row.querySelector(".list").innerHTML += `
-          <div class="card">
-            <video src="${movie.url}" controls></video>
+          <div class="card" data-title="${movie.title}">
+            <video src="${movie.url}" muted></video>
             <a href="${movie.url}" download>Download</a>
           </div>`;
       });
