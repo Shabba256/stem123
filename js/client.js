@@ -10,31 +10,70 @@ const content = document.getElementById("content");
 // ==============================
 // FEATURED HERO MOVIE
 // ==============================
+
+// ==============================
+// HERO AUTO SLIDER
+// ==============================
+let heroMovies = [];
+let currentHeroIndex = 0;
+let heroInterval = null;
+
 db.collection("movies")
   .where("featured", "==", true)
   .orderBy("timestamp", "desc")
-  .limit(1)
   .get()
   .then(snapshot => {
     snapshot.forEach(doc => {
-      const movie = doc.data();
-      const fileName = movie.url.split("/").pop();
-
-      // Hero background
-      hero.style.backgroundImage = `
-        linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0.3)),
-        url("https://res.cloudinary.com/dagxhzebg/video/upload/so_1,w_1280/${fileName.replace('.mp4','.jpg')}")
-      `;
-      heroTitle.textContent = movie.title;
-      heroDesc.textContent = movie.description;
-
-      playBtn.onclick = () => {
-        window.open(movie.url, "_blank");
-        incrementViews(doc.id);
-      };
+      heroMovies.push({ ...doc.data(), id: doc.id });
     });
+
+    if (heroMovies.length === 0) return;
+
+    renderHero(heroMovies[0]);
+
+    if (heroMovies.length > 1) {
+      heroInterval = setInterval(nextHero, 7000);
+    }
   })
   .catch(err => console.error("Hero error:", err));
+
+function nextHero() {
+  currentHeroIndex = (currentHeroIndex + 1) % heroMovies.length;
+  renderHero(heroMovies[currentHeroIndex]);
+}
+
+function renderHero(movie) {
+  const fileName = movie.url.split("/").pop();
+  const bg = `https://res.cloudinary.com/dagxhzebg/video/upload/so_1,w_1280/${fileName.replace(".mp4", ".jpg")}`;
+
+  hero.classList.remove("hero-animate");
+
+  setTimeout(() => {
+    hero.style.backgroundImage = `
+      linear-gradient(to top, rgba(0,0,0,0.95), rgba(0,0,0,0.4)),
+      url("${bg}")
+    `;
+
+    heroTitle.textContent = movie.title;
+    heroDesc.textContent = movie.description || "Watch now";
+
+    playBtn.onclick = () => {
+      window.open(movie.url, "_blank");
+      incrementViews(movie.id);
+    };
+
+    hero.classList.add("hero-animate");
+  }, 200);
+  hero.addEventListener("mouseenter", () => {
+  if (heroInterval) clearInterval(heroInterval);
+});
+
+hero.addEventListener("mouseleave", () => {
+  if (heroMovies.length > 1) {
+    heroInterval = setInterval(nextHero, 7000);
+  }
+});
+}
 
 // ==============================
 // MOVIE LISTING (GROUPED BY CATEGORY)
