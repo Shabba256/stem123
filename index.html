@@ -2,56 +2,30 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>StreamFlix</title>
-
-  <!-- ============================== -->
-  <!-- STYLES -->
-  <!-- ============================== -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stream Flix</title>
   <link rel="stylesheet" href="css/client.css">
-
-  <!-- ============================== -->
-  <!-- FIREBASE SDKs -->
-  <!-- ============================== -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-
-  <style>
-    /* Notifications for client interface */
-    .notification {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      padding: 12px 20px;
-      border-radius: 6px;
-      color: #fff;
-      font-weight: bold;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-      opacity: 0.95;
-      z-index: 1000;
-      animation: slideIn 0.4s ease forwards;
-    }
-
-    .notification.info { background: #3498db; }
-    .notification.success { background: #2ecc71; }
-    .notification.error { background: #e74c3c; }
-
-    @keyframes slideIn {
-      from { transform: translateX(100%); opacity: 0; }
-      to { transform: translateX(0); opacity: 0.95; }
-    }
-  </style>
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 </head>
-
 <body>
-  <!-- ============================== -->
-  <!-- HEADER -->
-  <!-- ============================== -->
-  <header>StreamFlix</header>
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="navbar-left">
+      <div class="logo">Stream Flix</div>
+      <div class="nav-links">
+        <a href="#">Home</a>
+        <a href="#">Categories</a>
+      </div>
+    </div>
+    <div class="navbar-right">
+      <input type="text" id="quick-search" placeholder="Search movies...">
+    </div>
+  </nav>
 
-  <!-- ============================== -->
-  <!-- HERO SECTION (FEATURED MOVIE) -->
-  <!-- ============================== -->
+  <!-- HERO BANNER -->
   <section id="hero">
     <div class="hero-overlay">
       <h1 id="hero-title">Featured Movie</h1>
@@ -60,14 +34,16 @@
     </div>
   </section>
 
-  <!-- ============================== -->
-  <!-- MOVIE LISTINGS -->
-  <!-- ============================== -->
+  <!-- MOVIE ROWS -->
   <div id="content"></div>
 
-  <!-- ============================== -->
-  <!-- SCRIPTS -->
-  <!-- ============================== -->
+  <!-- NOTIFICATIONS AND PROGRESS BAR PLACEHOLDERS -->
+  <div id="progress-container" class="hidden">
+    <div id="progress-bar"></div>
+    <p id="progress-text"></p>
+  </div>
+
+  <!-- CLIENT JS -->
   <script src="js/config.js"></script>
   <script src="js/client.js"></script>
 </body>
