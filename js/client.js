@@ -45,7 +45,9 @@ function nextHero() {
 
 function renderHero(movie) {
   const fileName = movie.url.split("/").pop();
-  const bg = `https://res.cloudinary.com/dagxhzebg/video/upload/so_1,w_1280/${fileName.replace(".mp4", ".jpg")}`;
+  const bg = movie.thumbnail 
+             ? movie.thumbnail 
+             : `https://res.cloudinary.com/dagxhzebg/video/upload/so_1,w_1280/${fileName.replace(".mp4", ".jpg")}`;
 
   hero.classList.remove("hero-animate");
 
@@ -92,8 +94,9 @@ db.collection("movies")
       row.innerHTML = `<h2>${category}</h2><div class="list"></div>`;
 
       grouped[category].forEach(movie => {
-        const fileName = movie.url.split("/").pop();
-        const thumbUrl = `https://res.cloudinary.com/dagxhzebg/video/upload/so_1,w_400/${fileName.replace('.mp4','.jpg')}`;
+        const thumbUrl = movie.thumbnail 
+                         ? movie.thumbnail 
+                         : `https://res.cloudinary.com/dagxhzebg/video/upload/so_1,w_400/${movie.url.split("/").pop().replace('.mp4','.jpg')}`;
 
         row.querySelector(".list").innerHTML += `
           <div class="card" data-title="${movie.title}" onclick="openMovie('${movie.id}')">

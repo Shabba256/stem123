@@ -33,25 +33,26 @@ function adminLogin() {
       currentUser = user;
       document.getElementById("panel").classList.remove("hidden");
       document.getElementById("login").style.display = "none";
-      loadAdminMovies();
+      loadAdminMovies(); // ✅ Defined below
       notify("Admin logged in ✅", "success");
     })
     .catch(err => notify("Login failed: " + err.message, "error"));
 }
 
 // ==============================
-// UPLOAD VIDEO (WITH PROGRESS)
+// UPLOAD VIDEO (WITH OPTIONAL THUMBNAIL)
 // ==============================
 function uploadVideo() {
   if (!currentUser) { notify("Admin not logged in", "error"); return; }
 
-  const file = document.getElementById("videoFile").files[0];
+  const videoFile = document.getElementById("videoFile").files[0];
+  const thumbnailFile = document.getElementById("thumbnailFile").files[0]; // optional
   const title = document.getElementById("title").value.trim();
   const category = document.getElementById("category").value.trim();
   const description = document.getElementById("description").value.trim() || "Watch the latest release now";
   const featured = document.getElementById("featured").checked;
 
-  if (!file || !title || !category) { notify("Fill all fields", "error"); return; }
+  if (!videoFile || !title || !category) { notify("Fill all required fields", "error"); return; }
 
   const progressBox = document.getElementById("progress-container");
   const progressBar = document.getElementById("progress-bar");
@@ -61,8 +62,11 @@ function uploadVideo() {
   progressBar.style.width = "0%";
   progressText.textContent = "Uploading 0%";
 
+  // --------------------------
+  // UPLOAD VIDEO FIRST
+  // --------------------------
   const data = new FormData();
-  data.append("file", file);
+  data.append("file", videoFile);
   data.append("upload_preset", UPLOAD_PRESET);
 
   const xhr = new XMLHttpRequest();
@@ -72,37 +76,83 @@ function uploadVideo() {
     if (e.lengthComputable) {
       const percent = Math.round((e.loaded / e.total) * 100);
       progressBar.style.width = percent + "%";
-      progressText.textContent = `Uploading ${percent}%`;
+      progressText.textContent = `Uploading video ${percent}%`;
     }
   };
 
   xhr.onload = () => {
-    if (xhr.status !== 200) { notify("Upload failed", "error"); return; }
+    if (xhr.status !== 200) { notify("Video upload failed", "error"); return; }
     const result = JSON.parse(xhr.responseText);
     if (!result.secure_url) { notify("Invalid Cloudinary response", "error"); return; }
 
-    // Save to Firestore
-    db.collection("movies")
-      .add({
-        title, category, description, url: result.secure_url,
-        featured, timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-        views: 0, downloads: 0
-      })
-      .then(() => {
-        progressBar.style.width = "100%";
-        progressText.textContent = "Upload complete ✅";
-        document.getElementById("videoFile").value = "";
-        document.getElementById("title").value = "";
-        document.getElementById("category").value = "";
-        document.getElementById("description").value = "";
-        document.getElementById("featured").checked = false;
-        notify("Movie uploaded successfully", "success");
-      })
-      .catch(err => notify("Firestore error: " + err.message, "error"));
+    const videoUrl = result.secure_url;
+
+    // --------------------------
+    // UPLOAD THUMBNAIL IF EXISTS
+    // --------------------------
+    if (thumbnailFile) {
+      const thumbData = new FormData();
+      thumbData.append("file", thumbnailFile);
+      thumbData.append("upload_preset", UPLOAD_PRESET);
+
+      const thumbXhr = new XMLHttpRequest();
+      thumbXhr.open("POST", `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`);
+
+      thumbXhr.upload.onprogress = e => {
+        if (e.lengthComputable) {
+          const percent = Math.round((e.loaded / e.total) * 100);
+          progressBar.style.width = percent + "%";
+          progressText.textContent = `Uploading thumbnail ${percent}%`;
+        }
+      };
+
+      thumbXhr.onload = () => {
+        const thumbResult = JSON.parse(thumbXhr.responseText);
+        const thumbnailUrl = thumbResult.secure_url;
+
+        saveMovieToFirestore(title, category, description, featured, videoUrl, thumbnailUrl);
+      };
+
+      thumbXhr.onerror = () => notify("Thumbnail upload failed", "error");
+      thumbXhr.send(thumbData);
+    } else {
+      saveMovieToFirestore(title, category, description, featured, videoUrl, null);
+    }
   };
 
   xhr.onerror = () => notify("Network error", "error");
   xhr.send(data);
+}
+
+// ==============================
+// SAVE MOVIE TO FIRESTORE
+// ==============================
+function saveMovieToFirestore(title, category, description, featured, videoUrl, thumbnailUrl) {
+  db.collection("movies").add({
+    title,
+    category,
+    description,
+    url: videoUrl,
+    thumbnail: thumbnailUrl || null,
+    featured,
+    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+    views: 0,
+    downloads: 0
+  }).then(() => {
+    const progressBar = document.getElementById("progress-bar");
+    const progressText = document.getElementById("progress-text");
+    progressBar.style.width = "100%";
+    progressText.textContent = "Upload complete ✅";
+
+    document.getElementById("videoFile").value = "";
+    document.getElementById("thumbnailFile").value = "";
+    document.getElementById("title").value = "";
+    document.getElementById("category").value = "";
+    document.getElementById("description").value = "";
+    document.getElementById("featured").checked = false;
+
+    notify("Movie uploaded successfully", "success");
+  }).catch(err => notify("Firestore error: " + err.message, "error"));
 }
 
 // ==============================

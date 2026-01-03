@@ -11,7 +11,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   
   <style>
-    /* Notifications container is now fixed top-right */
+    /* Notifications container */
     .notification {
       position: fixed;
       top: 20px;
@@ -35,7 +35,7 @@
       to { transform: translateX(0); opacity: 0.95; }
     }
 
-    /* Modern gradient progress bar */
+    /* Progress bar */
     #progress-bar {
       height: 20px;
       width: 0%;
@@ -75,6 +75,7 @@
 
     <h2>Upload Movie</h2>
     <input type="file" id="videoFile" accept="video/*">
+    <input type="file" id="thumbnailFile" accept="image/*"> <!-- NEW -->
     <input type="text" id="title" placeholder="Movie title">
     <input type="text" id="category" placeholder="Category (Movies, Series, Music)">
     <textarea id="description" placeholder="Movie description"></textarea>
