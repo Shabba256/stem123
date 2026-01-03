@@ -1,5 +1,5 @@
 // ==============================
-// DOM ELEMENTS
+// HERO ELEMENTS
 // ==============================
 const hero = document.getElementById("hero");
 const heroTitle = document.getElementById("hero-title");
@@ -8,25 +8,16 @@ const playBtn = document.getElementById("play-btn");
 const content = document.getElementById("content");
 
 // ==============================
-// HERO AUTO SLIDER STATE
+// FEATURED HERO MOVIE
+// ==============================
+
+// ==============================
+// HERO AUTO SLIDER
 // ==============================
 let heroMovies = [];
 let currentHeroIndex = 0;
 let heroInterval = null;
-const HERO_DELAY = 7000;
 
-// ==============================
-// CLOUDINARY THUMB HELPER (SAFE)
-// ==============================
-function getCloudinaryThumb(url, width = 1280) {
-  return url
-    .replace("/upload/", `/upload/so_1,w_${width}/`)
-    .replace(/\.(mp4|mov|webm).*/i, ".jpg");
-}
-
-// ==============================
-// LOAD FEATURED HERO MOVIES
-// ==============================
 db.collection("movies")
   .where("featured", "==", true)
   .orderBy("timestamp", "desc")
@@ -36,33 +27,31 @@ db.collection("movies")
       heroMovies.push({ ...doc.data(), id: doc.id });
     });
 
-    if (!heroMovies.length) return;
+    if (heroMovies.length === 0) return;
 
     renderHero(heroMovies[0]);
 
     if (heroMovies.length > 1) {
-      heroInterval = setInterval(nextHero, HERO_DELAY);
+      heroInterval = setInterval(nextHero, 7000);
     }
   })
   .catch(err => console.error("Hero error:", err));
 
-// ==============================
-// HERO SLIDER CONTROLS
-// ==============================
 function nextHero() {
   currentHeroIndex = (currentHeroIndex + 1) % heroMovies.length;
   renderHero(heroMovies[currentHeroIndex]);
 }
 
 function renderHero(movie) {
-  const bgImage = getCloudinaryThumb(movie.url, 1280);
+  const fileName = movie.url.split("/").pop();
+  const bg = `https://res.cloudinary.com/dagxhzebg/video/upload/so_1,w_1280/${fileName.replace(".mp4", ".jpg")}`;
 
   hero.classList.remove("hero-animate");
 
   setTimeout(() => {
     hero.style.backgroundImage = `
-      linear-gradient(to top, rgba(0,0,0,0.85), rgba(0,0,0,0.25)),
-      url("${bgImage}")
+      linear-gradient(to top, rgba(0,0,0,0.95), rgba(0,0,0,0.4)),
+      url("${bg}")
     `;
 
     heroTitle.textContent = movie.title;
@@ -75,21 +64,19 @@ function renderHero(movie) {
 
     hero.classList.add("hero-animate");
   }, 200);
-}
-
-// Pause slider on hover
-hero.addEventListener("mouseenter", () => {
+  hero.addEventListener("mouseenter", () => {
   if (heroInterval) clearInterval(heroInterval);
 });
 
 hero.addEventListener("mouseleave", () => {
   if (heroMovies.length > 1) {
-    heroInterval = setInterval(nextHero, HERO_DELAY);
+    heroInterval = setInterval(nextHero, 7000);
   }
 });
+}
 
 // ==============================
-// MOVIE LISTING (GROUPED)
+// MOVIE LISTING (GROUPED BY CATEGORY)
 // ==============================
 db.collection("movies")
   .orderBy("timestamp", "desc")
@@ -98,9 +85,9 @@ db.collection("movies")
     const grouped = {};
 
     snapshot.forEach(doc => {
-      const movie = { ...doc.data(), id: doc.id };
+      const movie = doc.data();
       if (!grouped[movie.category]) grouped[movie.category] = [];
-      grouped[movie.category].push(movie);
+      grouped[movie.category].push({ ...movie, id: doc.id });
     });
 
     for (const category in grouped) {
@@ -108,45 +95,32 @@ db.collection("movies")
       row.className = "row";
       row.innerHTML = `<h2>${category}</h2><div class="list"></div>`;
 
-      const list = row.querySelector(".list");
-
       grouped[category].forEach(movie => {
-        const thumbUrl = getCloudinaryThumb(movie.url, 400);
+        const fileName = movie.url.split("/").pop();
+        const thumbUrl = `https://res.cloudinary.com/dagxhzebg/video/upload/so_1,w_400/${fileName.replace('.mp4','.jpg')}`;
 
-        const card = document.createElement("div");
-        card.className = "card";
-        card.dataset.id = movie.id;
-        card.dataset.title = movie.title;
+        row.querySelector(".list").innerHTML += `
+          <div class="card" data-title="${movie.title}">
+            <img src="${thumbUrl}" alt="${movie.title}" loading="lazy"
+                 onclick="playMovie('${movie.id}','${movie.url}')"/>
 
-        card.innerHTML = `
-          <img src="${thumbUrl}" alt="${movie.title}" loading="lazy"/>
+            <div class="card-buttons">
+              <button class="play-btn"
+                onclick="event.stopPropagation(); playMovie('${movie.id}','${movie.url}')">
+                ▶ Play
+              </button>
+              <a class="download-btn" href="${movie.url}" download
+                 onclick="event.stopPropagation(); downloadMovie('${movie.id}','${movie.url}')">
+                 ⬇ Download
+              </a>
+            </div>
 
-          <div class="card-buttons">
-            <button class="play-btn">▶ Play</button>
-            <a class="download-btn" href="${movie.url}" download>⬇ Download</a>
-          </div>
-
-          <div class="analytics">
-            <span>👁 <span class="views-count">${movie.views || 0}</span></span>
-            <span>⬇ <span class="downloads-count">${movie.downloads || 0}</span></span>
+            <div class="analytics">
+              <span>Views: <span class="views-count">${movie.views || 0}</span></span>
+              <span>Downloads: <span class="downloads-count">${movie.downloads || 0}</span></span>
+            </div>
           </div>
         `;
-
-        // CLICK HANDLERS
-        card.querySelector("img").onclick = () =>
-          playMovie(movie.id, movie.url);
-
-        card.querySelector(".play-btn").onclick = e => {
-          e.stopPropagation();
-          playMovie(movie.id, movie.url);
-        };
-
-        card.querySelector(".download-btn").onclick = e => {
-          e.stopPropagation();
-          downloadMovie(movie.id, movie.url, card);
-        };
-
-        list.appendChild(card);
       });
 
       content.appendChild(row);
@@ -155,34 +129,31 @@ db.collection("movies")
   .catch(err => console.error("Listing error:", err));
 
 // ==============================
-// ANALYTICS FUNCTIONS
+// VIEWS / DOWNLOADS FUNCTIONS
 // ==============================
 function incrementViews(movieId) {
   db.collection("movies").doc(movieId).update({
     views: firebase.firestore.FieldValue.increment(1)
+  }).then(() => {
+    const card = document.querySelector(`.card[data-title]`);
+    const countEl = card?.querySelector(".views-count");
+    if (countEl) countEl.textContent = parseInt(countEl.textContent) + 1;
   });
-
-  const card = document.querySelector(`.card[data-id="${movieId}"]`);
-  if (card) {
-    const el = card.querySelector(".views-count");
-    el.textContent = parseInt(el.textContent) + 1;
-  }
 }
 
-function downloadMovie(movieId, url, card) {
+function downloadMovie(movieId, url) {
   const a = document.createElement("a");
   a.href = url;
   a.download = "";
-  document.body.appendChild(a);
   a.click();
-  document.body.removeChild(a);
 
   db.collection("movies").doc(movieId).update({
     downloads: firebase.firestore.FieldValue.increment(1)
+  }).then(() => {
+    const card = document.querySelector(`.card[data-title]`);
+    const countEl = card?.querySelector(".downloads-count");
+    if (countEl) countEl.textContent = parseInt(countEl.textContent) + 1;
   });
-
-  const el = card.querySelector(".downloads-count");
-  el.textContent = parseInt(el.textContent) + 1;
 }
 
 function playMovie(movieId, url) {
