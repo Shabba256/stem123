@@ -1,4 +1,9 @@
 // ==============================
+// FIREBASE
+// ==============================
+const db = firebase.firestore();
+
+// ==============================
 // HERO ELEMENTS
 // ==============================
 const hero = document.getElementById("hero");
@@ -8,11 +13,7 @@ const playBtn = document.getElementById("play-btn");
 const content = document.getElementById("content");
 
 // ==============================
-// FEATURED HERO MOVIE
-// ==============================
-
-// ==============================
-// HERO AUTO SLIDER
+// HERO AUTO SLIDER (FEATURED)
 // ==============================
 let heroMovies = [];
 let currentHeroIndex = 0;
@@ -27,7 +28,7 @@ db.collection("movies")
       heroMovies.push({ ...doc.data(), id: doc.id });
     });
 
-    if (heroMovies.length === 0) return;
+    if (!heroMovies.length) return;
 
     renderHero(heroMovies[0]);
 
@@ -44,13 +45,14 @@ function nextHero() {
 
 function renderHero(movie) {
   const fileName = movie.url.split("/").pop();
-  const bg = `https://res.cloudinary.com/dagxhzebg/video/upload/so_1,w_1280/${fileName.replace(".mp4", ".jpg")}`;
+
+  const bg = `https://res.cloudinary.com/dagxhzebg/video/upload/so_1,c_fill,w_1280,f_jpg/${fileName}`;
 
   hero.classList.remove("hero-animate");
 
   setTimeout(() => {
     hero.style.backgroundImage = `
-      linear-gradient(to top, rgba(0,0,0,0.95), rgba(0,0,0,0.4)),
+      linear-gradient(to top, rgba(0,0,0,.95), rgba(0,0,0,.35)),
       url("${bg}")
     `;
 
@@ -58,25 +60,23 @@ function renderHero(movie) {
     heroDesc.textContent = movie.description || "Watch now";
 
     playBtn.onclick = () => {
-      window.open(movie.url, "_blank");
-      incrementViews(movie.id);
+      playMovie(movie.id, movie.url);
     };
 
     hero.classList.add("hero-animate");
   }, 200);
-  hero.addEventListener("mouseenter", () => {
-  if (heroInterval) clearInterval(heroInterval);
-});
+}
 
+// Pause slider on hover
+hero.addEventListener("mouseenter", () => heroInterval && clearInterval(heroInterval));
 hero.addEventListener("mouseleave", () => {
   if (heroMovies.length > 1) {
     heroInterval = setInterval(nextHero, 7000);
   }
 });
-}
 
 // ==============================
-// MOVIE LISTING (GROUPED BY CATEGORY)
+// MOVIE LISTING (GROUPED)
 // ==============================
 db.collection("movies")
   .orderBy("timestamp", "desc")
@@ -85,9 +85,9 @@ db.collection("movies")
     const grouped = {};
 
     snapshot.forEach(doc => {
-      const movie = doc.data();
+      const movie = { ...doc.data(), id: doc.id };
       if (!grouped[movie.category]) grouped[movie.category] = [];
-      grouped[movie.category].push({ ...movie, id: doc.id });
+      grouped[movie.category].push(movie);
     });
 
     for (const category in grouped) {
@@ -97,27 +97,29 @@ db.collection("movies")
 
       grouped[category].forEach(movie => {
         const fileName = movie.url.split("/").pop();
-        const thumbUrl = `https://res.cloudinary.com/dagxhzebg/video/upload/so_1,w_400/${fileName.replace('.mp4','.jpg')}`;
+
+        const thumbUrl =
+          `https://res.cloudinary.com/dagxhzebg/video/upload/so_1,c_fill,w_400,f_jpg/${fileName}`;
 
         row.querySelector(".list").innerHTML += `
-          <div class="card" data-title="${movie.title}">
-            <img src="${thumbUrl}" alt="${movie.title}" loading="lazy"
-                 onclick="playMovie('${movie.id}','${movie.url}')"/>
+          <div class="card" data-id="${movie.id}">
+            <img src="${thumbUrl}" alt="${movie.title}" loading="lazy"/>
 
             <div class="card-buttons">
               <button class="play-btn"
-                onclick="event.stopPropagation(); playMovie('${movie.id}','${movie.url}')">
+                onclick="playMovie('${movie.id}','${movie.url}')">
                 ▶ Play
               </button>
-              <a class="download-btn" href="${movie.url}" download
-                 onclick="event.stopPropagation(); downloadMovie('${movie.id}','${movie.url}')">
-                 ⬇ Download
-              </a>
+
+              <button class="download-btn"
+                onclick="downloadMovie('${movie.id}','${movie.url}')">
+                ⬇ Download
+              </button>
             </div>
 
             <div class="analytics">
-              <span>Views: <span class="views-count">${movie.views || 0}</span></span>
-              <span>Downloads: <span class="downloads-count">${movie.downloads || 0}</span></span>
+              <span>👁 <span class="views-count">${movie.views || 0}</span></span>
+              <span>⬇ <span class="downloads-count">${movie.downloads || 0}</span></span>
             </div>
           </div>
         `;
@@ -129,34 +131,38 @@ db.collection("movies")
   .catch(err => console.error("Listing error:", err));
 
 // ==============================
-// VIEWS / DOWNLOADS FUNCTIONS
+// PLAY / DOWNLOAD / ANALYTICS
 // ==============================
-function incrementViews(movieId) {
-  db.collection("movies").doc(movieId).update({
-    views: firebase.firestore.FieldValue.increment(1)
-  }).then(() => {
-    const card = document.querySelector(`.card[data-title]`);
-    const countEl = card?.querySelector(".views-count");
-    if (countEl) countEl.textContent = parseInt(countEl.textContent) + 1;
-  });
+function playMovie(movieId, url) {
+  window.open(url, "_blank");
+  incrementViews(movieId);
 }
 
 function downloadMovie(movieId, url) {
   const a = document.createElement("a");
   a.href = url;
   a.download = "";
+  document.body.appendChild(a);
   a.click();
+  document.body.removeChild(a);
 
   db.collection("movies").doc(movieId).update({
     downloads: firebase.firestore.FieldValue.increment(1)
-  }).then(() => {
-    const card = document.querySelector(`.card[data-title]`);
-    const countEl = card?.querySelector(".downloads-count");
-    if (countEl) countEl.textContent = parseInt(countEl.textContent) + 1;
   });
+
+  updateCounter(movieId, "downloads-count");
 }
 
-function playMovie(movieId, url) {
-  window.open(url, "_blank");
-  incrementViews(movieId);
+function incrementViews(movieId) {
+  db.collection("movies").doc(movieId).update({
+    views: firebase.firestore.FieldValue.increment(1)
+  });
+
+  updateCounter(movieId, "views-count");
+}
+
+function updateCounter(movieId, className) {
+  const card = document.querySelector(`.card[data-id="${movieId}"]`);
+  const el = card?.querySelector(`.${className}`);
+  if (el) el.textContent = parseInt(el.textContent) + 1;
 }
