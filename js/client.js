@@ -8,8 +8,15 @@ const playBtn = document.getElementById("play-btn");
 const content = document.getElementById("content");
 
 // ==============================
-// FEATURED HERO MOVIE
+// NOTIFICATIONS
 // ==============================
+function notify(message, type = "info") {
+  const n = document.createElement("div");
+  n.className = `notification ${type}`;
+  n.textContent = message;
+  document.body.appendChild(n);
+  setTimeout(() => n.remove(), 3000);
+}
 
 // ==============================
 // HERO AUTO SLIDER
@@ -27,7 +34,7 @@ db.collection("movies")
       heroMovies.push({ ...doc.data(), id: doc.id });
     });
 
-    if (heroMovies.length === 0) return;
+    if (!heroMovies.length) return;
 
     renderHero(heroMovies[0]);
 
@@ -64,26 +71,24 @@ function renderHero(movie) {
 
     hero.classList.add("hero-animate");
   }, 200);
-  hero.addEventListener("mouseenter", () => {
-  if (heroInterval) clearInterval(heroInterval);
-});
 
-hero.addEventListener("mouseleave", () => {
-  if (heroMovies.length > 1) {
-    heroInterval = setInterval(nextHero, 7000);
-  }
-});
+  hero.addEventListener("mouseenter", () => {
+    if (heroInterval) clearInterval(heroInterval);
+  });
+
+  hero.addEventListener("mouseleave", () => {
+    if (heroMovies.length > 1) heroInterval = setInterval(nextHero, 7000);
+  });
 }
 
 // ==============================
-// MOVIE LISTING (GROUPED BY CATEGORY)
+// MOVIE LISTING
 // ==============================
 db.collection("movies")
   .orderBy("timestamp", "desc")
   .get()
   .then(snapshot => {
     const grouped = {};
-
     snapshot.forEach(doc => {
       const movie = doc.data();
       if (!grouped[movie.category]) grouped[movie.category] = [];
@@ -103,7 +108,6 @@ db.collection("movies")
           <div class="card" data-title="${movie.title}">
             <img src="${thumbUrl}" alt="${movie.title}" loading="lazy"
                  onclick="playMovie('${movie.id}','${movie.url}')"/>
-
             <div class="card-buttons">
               <button class="play-btn"
                 onclick="event.stopPropagation(); playMovie('${movie.id}','${movie.url}')">
@@ -114,7 +118,6 @@ db.collection("movies")
                  ⬇ Download
               </a>
             </div>
-
             <div class="analytics">
               <span>Views: <span class="views-count">${movie.views || 0}</span></span>
               <span>Downloads: <span class="downloads-count">${movie.downloads || 0}</span></span>
@@ -138,7 +141,7 @@ function incrementViews(movieId) {
     const card = document.querySelector(`.card[data-title]`);
     const countEl = card?.querySelector(".views-count");
     if (countEl) countEl.textContent = parseInt(countEl.textContent) + 1;
-  });
+  }).catch(err => notify("Failed to increment views", "error"));
 }
 
 function downloadMovie(movieId, url) {
@@ -153,7 +156,8 @@ function downloadMovie(movieId, url) {
     const card = document.querySelector(`.card[data-title]`);
     const countEl = card?.querySelector(".downloads-count");
     if (countEl) countEl.textContent = parseInt(countEl.textContent) + 1;
-  });
+    notify("Download started", "info");
+  }).catch(err => notify("Failed to increment downloads", "error"));
 }
 
 function playMovie(movieId, url) {

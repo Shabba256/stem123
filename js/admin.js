@@ -4,21 +4,29 @@
 let currentUser = null;
 
 // ==============================
+// NOTIFICATIONS
+// ==============================
+function notify(message, type = "info") {
+  const n = document.createElement("div");
+  n.className = `notification ${type}`;
+  n.textContent = message;
+  document.body.appendChild(n);
+  setTimeout(() => n.remove(), 3000);
+}
+
+// ==============================
 // ADMIN LOGIN
 // ==============================
 function adminLogin() {
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value.trim();
 
-  if (!email || !password) {
-    alert("Enter email and password");
-    return;
-  }
+  if (!email || !password) { notify("Enter email and password", "error"); return; }
 
   auth.signInWithEmailAndPassword(email, password)
     .then(({ user }) => {
       if (user.uid !== ADMIN_UID) {
-        alert("Not authorized as admin");
+        notify("Not authorized as admin", "error");
         auth.signOut();
         return;
       }
@@ -26,15 +34,16 @@ function adminLogin() {
       document.getElementById("panel").classList.remove("hidden");
       document.getElementById("login").style.display = "none";
       loadAdminMovies();
+      notify("Admin logged in ✅", "success");
     })
-    .catch(err => alert("Login failed: " + err.message));
+    .catch(err => notify("Login failed: " + err.message, "error"));
 }
 
 // ==============================
 // UPLOAD VIDEO (WITH PROGRESS)
 // ==============================
 function uploadVideo() {
-  if (!currentUser) { alert("Admin not logged in"); return; }
+  if (!currentUser) { notify("Admin not logged in", "error"); return; }
 
   const file = document.getElementById("videoFile").files[0];
   const title = document.getElementById("title").value.trim();
@@ -42,7 +51,7 @@ function uploadVideo() {
   const description = document.getElementById("description").value.trim() || "Watch the latest release now";
   const featured = document.getElementById("featured").checked;
 
-  if (!file || !title || !category) { alert("Fill all fields"); return; }
+  if (!file || !title || !category) { notify("Fill all fields", "error"); return; }
 
   const progressBox = document.getElementById("progress-container");
   const progressBar = document.getElementById("progress-bar");
@@ -68,9 +77,9 @@ function uploadVideo() {
   };
 
   xhr.onload = () => {
-    if (xhr.status !== 200) { alert("Upload failed"); return; }
+    if (xhr.status !== 200) { notify("Upload failed", "error"); return; }
     const result = JSON.parse(xhr.responseText);
-    if (!result.secure_url) { alert("Invalid Cloudinary response"); return; }
+    if (!result.secure_url) { notify("Invalid Cloudinary response", "error"); return; }
 
     // Save to Firestore
     db.collection("movies")
@@ -87,11 +96,12 @@ function uploadVideo() {
         document.getElementById("category").value = "";
         document.getElementById("description").value = "";
         document.getElementById("featured").checked = false;
+        notify("Movie uploaded successfully", "success");
       })
-      .catch(err => alert("Firestore error: " + err.message));
+      .catch(err => notify("Firestore error: " + err.message, "error"));
   };
 
-  xhr.onerror = () => alert("Network error");
+  xhr.onerror = () => notify("Network error", "error");
   xhr.send(data);
 }
 
@@ -151,19 +161,22 @@ function loadAdminMovies() {
           const updatedCategory = item.querySelector(".edit-category").value.trim();
           const updatedDescription = item.querySelector(".edit-description").value.trim();
 
-          if (!updatedTitle || !updatedCategory) { alert("Title and category cannot be empty"); return; }
+          if (!updatedTitle || !updatedCategory) { notify("Title and category cannot be empty", "error"); return; }
 
           db.collection("movies").doc(id).update({
             title: updatedTitle,
             category: updatedCategory,
             description: updatedDescription
-          }).then(() => alert("Movie updated ✅"))
-            .catch(err => alert("Update failed: " + err.message));
+          }).then(() => notify("Movie updated ✅", "success"))
+            .catch(err => notify("Update failed: " + err.message, "error"));
         };
 
         // Delete movie
         item.querySelector(".delete-btn").onclick = () => {
-          if (confirm("Delete this movie?")) db.collection("movies").doc(id).delete();
+          if (confirm("Delete this movie?")) {
+            db.collection("movies").doc(id).delete();
+            notify("Movie deleted", "info");
+          }
         };
 
         list.appendChild(item);
@@ -187,7 +200,7 @@ function toggleFeatured(movieId, value) {
       snapshot.forEach(doc => batch.update(doc.ref, { featured: false }));
       batch.update(db.collection("movies").doc(movieId), { featured: true });
       return batch.commit();
-    });
+    }).then(() => notify("Featured movie updated", "success"));
 }
 
 // ==============================

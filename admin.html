@@ -9,6 +9,55 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  
+  <style>
+    /* Notifications container is now fixed top-right */
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 12px 20px;
+      border-radius: 6px;
+      color: #fff;
+      font-weight: bold;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      opacity: 0.95;
+      z-index: 1000;
+      animation: slideIn 0.4s ease forwards;
+    }
+
+    .notification.info { background: #3498db; }
+    .notification.success { background: #2ecc71; }
+    .notification.error { background: #e74c3c; }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 0.95; }
+    }
+
+    /* Modern gradient progress bar */
+    #progress-bar {
+      height: 20px;
+      width: 0%;
+      border-radius: 6px;
+      background: linear-gradient(90deg, #e50914, #ff3b3b);
+      transition: width 0.4s ease;
+    }
+
+    #progress-container {
+      width: 100%;
+      max-width: 400px;
+      background: #222;
+      border-radius: 6px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    #progress-text {
+      margin-top: 6px;
+      font-size: 14px;
+    }
+  </style>
 </head>
 <body>
 

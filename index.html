@@ -15,6 +15,32 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
+  <style>
+    /* Notifications for client interface */
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 12px 20px;
+      border-radius: 6px;
+      color: #fff;
+      font-weight: bold;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      opacity: 0.95;
+      z-index: 1000;
+      animation: slideIn 0.4s ease forwards;
+    }
+
+    .notification.info { background: #3498db; }
+    .notification.success { background: #2ecc71; }
+    .notification.error { background: #e74c3c; }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 0.95; }
+    }
+  </style>
 </head>
 
 <body>
