@@ -72,21 +72,14 @@ header, .navbar {
 /* ROWS & LISTS */
 .row { padding:30px 40px; background: linear-gradient(to bottom, rgba(255,255,255,0.02), transparent); }
 .row h2 { font-size:24px; margin-bottom:14px; border-left:4px solid #e50914; padding-left:12px; }
-.list { display:flex; gap:12px; overflow-x:auto; scroll-behavior:smooth; padding-bottom:10px; }
+.list { display:flex; gap:12px; overflow-x:auto; scroll-behavior:smooth; }
 .list::-webkit-scrollbar { display:none; }
 
 /* MOVIE CARDS */
-.card { border-radius:10px; overflow:hidden; box-shadow:0 10px 25px rgba(0,0,0,0.6); min-width:180px; max-width:180px; height:260px; position:relative; flex-shrink:0; transition: transform 0.3s ease, box-shadow 0.3s ease; }
+.card { border-radius:10px; overflow:hidden; box-shadow:0 10px 25px rgba(0,0,0,0.6); min-width:180px; max-width:180px; height:260px; position:relative; flex-shrink:0; cursor:pointer; transition: transform 0.3s ease, box-shadow 0.3s ease; }
 .card:hover { transform: scale(1.1); box-shadow:0 20px 50px rgba(0,0,0,0.9); }
 .card::before { content:""; position:absolute; inset:0; background: linear-gradient(to top, rgba(0,0,0,0.6), transparent); z-index:1; pointer-events:none; }
-.card::after { content: attr(data-title); position:absolute; bottom:0; left:0; right:0; background:rgba(0,0,0,0.7); color:#fff; padding:6px; font-size:13px; opacity:0; transition:opacity 0.3s; }
-.card:hover::after { opacity:1; }
-.card img { width:100%; height:100%; object-fit:cover; border-radius:6px; cursor:pointer; transition: transform 0.3s; }
-.card img:hover { transform: scale(1.03); }
-.card-buttons { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); display:flex; gap:10px; opacity:0; transition:opacity 0.3s; }
-.card:hover .card-buttons { opacity:1; }
-.card-buttons button, .card-buttons .download-btn { background:rgba(0,0,0,0.7); color:#fff; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-size:13px; text-decoration:none; transition: background 0.3s, transform 0.2s; }
-.card-buttons button:hover, .card-buttons .download-btn:hover { background:#e50914; transform:scale(1.05); }
+.card::after { content: attr(data-title); position:absolute; bottom:0; left:0; right:0; background:rgba(0,0,0,0.7); color:#fff; padding:6px; font-size:13px; text-align:center; }
 
 /* ANALYTICS */
 .analytics { display:flex; justify-content:space-between; font-size:12px; margin-top:4px; }
@@ -110,7 +103,6 @@ header, .navbar {
   #hero { height:50vh; }
   header { font-size:22px; }
   .card { min-width:140px; height:200px; }
-  .card-buttons { opacity:1; }
   .navbar { flex-direction:column; align-items:flex-start; padding:12px 20px; gap:8px; }
   .navbar-left { width:100%; justify-content:space-between; gap:12px; }
   .nav-links { display:flex; gap:12px; flex-wrap:wrap; }
