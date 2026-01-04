@@ -1,5 +1,5 @@
 // ==============================
-// HERO ELEMENTS
+// GLOBAL ELEMENTS
 // ==============================
 const hero = document.getElementById("hero");
 const heroTitle = document.getElementById("hero-title");
@@ -11,25 +11,16 @@ const searchInput = document.getElementById("quick-search");
 // ==============================
 // NOTIFICATIONS
 // ==============================
-function notify(message, type = "info") {
+function notify(msg, type = "info") {
   const n = document.createElement("div");
   n.className = `notification ${type}`;
-  n.textContent = message;
+  n.textContent = msg;
   document.body.appendChild(n);
   setTimeout(() => n.remove(), 3000);
 }
 
 // ==============================
-// HELPER: GET THUMBNAIL URL
-// ==============================
-function getThumbnail(movie) {
-  if (movie.thumbnail) return movie.thumbnail;
-  const fileName = movie.url.split("/").pop().replace(".mp4", ".jpg");
-  return `https://res.cloudinary.com/${CLOUD_NAME}/video/upload/so_1,w_400/${fileName}`;
-}
-
-// ==============================
-// HERO AUTO SLIDER
+// HERO SLIDER
 // ==============================
 let heroMovies = [];
 let currentHeroIndex = 0;
@@ -45,7 +36,7 @@ db.collection("movies")
     renderHero(heroMovies[0]);
     if (heroMovies.length > 1) heroInterval = setInterval(nextHero, 7000);
   })
-  .catch(err => console.error("Hero error:", err));
+  .catch(err => console.error("Hero load error:", err));
 
 function nextHero() {
   currentHeroIndex = (currentHeroIndex + 1) % heroMovies.length;
@@ -53,7 +44,12 @@ function nextHero() {
 }
 
 function renderHero(movie) {
-  const bg = getThumbnail(movie);
+  const fileName = movie.url.split("/").pop();
+
+  // Use custom thumbnail if available, otherwise generate auto screenshot via Cloudinary
+  const bg = movie.thumbnail
+    ? movie.thumbnail
+    : `https://res.cloudinary.com/dagxhzebg/video/upload/f_jpg,c_fill,w_1280/${fileName.replace(".mp4", ".jpg")}`;
 
   hero.classList.remove("hero-animate");
 
@@ -64,23 +60,22 @@ function renderHero(movie) {
     `;
     heroTitle.textContent = movie.title;
     heroDesc.textContent = movie.description || "Watch now";
-
     playBtn.onclick = () => {
       window.open(movie.url, "_blank");
       incrementViews(movie.id);
     };
-
     hero.classList.add("hero-animate");
   }, 200);
 
-  hero.addEventListener("mouseenter", () => heroInterval && clearInterval(heroInterval));
-  hero.addEventListener("mouseleave", () => {
+  // Pause slider on hover
+  hero.onmouseenter = () => heroInterval && clearInterval(heroInterval);
+  hero.onmouseleave = () => {
     if (heroMovies.length > 1) heroInterval = setInterval(nextHero, 7000);
-  });
+  };
 }
 
 // ==============================
-// MOVIE LISTING (FRONT PAGE)
+// MOVIE LISTINGS
 // ==============================
 db.collection("movies")
   .orderBy("timestamp", "desc")
@@ -99,7 +94,10 @@ db.collection("movies")
       row.innerHTML = `<h2>${category}</h2><div class="list"></div>`;
 
       grouped[category].forEach(movie => {
-        const thumbUrl = getThumbnail(movie);
+        const fileName = movie.url.split("/").pop();
+        const thumbUrl = movie.thumbnail
+          ? movie.thumbnail
+          : `https://res.cloudinary.com/dagxhzebg/video/upload/f_jpg,c_fill,w_400/${fileName.replace(".mp4", ".jpg")}`;
 
         row.querySelector(".list").innerHTML += `
           <div class="card" data-title="${movie.title}" onclick="openMovie('${movie.id}')">
@@ -114,14 +112,14 @@ db.collection("movies")
   .catch(err => console.error("Listing error:", err));
 
 // ==============================
-// OPEN MOVIE DETAIL
+// OPEN MOVIE PAGE
 // ==============================
 function openMovie(movieId) {
   window.location.href = `movie.html?id=${movieId}`;
 }
 
 // ==============================
-// VIEWS / DOWNLOADS
+// INCREMENT VIEWS
 // ==============================
 function incrementViews(movieId) {
   db.collection("movies").doc(movieId).update({
