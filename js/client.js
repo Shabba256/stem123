@@ -20,6 +20,15 @@ function notify(message, type = "info") {
 }
 
 // ==============================
+// HELPER: GET THUMBNAIL URL
+// ==============================
+function getThumbnail(movie) {
+  if (movie.thumbnail) return movie.thumbnail;
+  const fileName = movie.url.split("/").pop().replace(".mp4", ".jpg");
+  return `https://res.cloudinary.com/${CLOUD_NAME}/video/upload/so_1,w_400/${fileName}`;
+}
+
+// ==============================
 // HERO AUTO SLIDER
 // ==============================
 let heroMovies = [];
@@ -44,10 +53,7 @@ function nextHero() {
 }
 
 function renderHero(movie) {
-  const fileName = movie.url.split("/").pop();
-  const bg = movie.thumbnail 
-             ? movie.thumbnail 
-             : `https://res.cloudinary.com/dagxhzebg/video/upload/so_1,w_1280/${fileName.replace(".mp4", ".jpg")}`;
+  const bg = getThumbnail(movie);
 
   hero.classList.remove("hero-animate");
 
@@ -56,7 +62,6 @@ function renderHero(movie) {
       linear-gradient(to top, rgba(0,0,0,0.95), rgba(0,0,0,0.4)),
       url("${bg}")
     `;
-
     heroTitle.textContent = movie.title;
     heroDesc.textContent = movie.description || "Watch now";
 
@@ -94,9 +99,7 @@ db.collection("movies")
       row.innerHTML = `<h2>${category}</h2><div class="list"></div>`;
 
       grouped[category].forEach(movie => {
-        const thumbUrl = movie.thumbnail 
-                         ? movie.thumbnail 
-                         : `https://res.cloudinary.com/dagxhzebg/video/upload/so_1,w_400/${movie.url.split("/").pop().replace('.mp4','.jpg')}`;
+        const thumbUrl = getThumbnail(movie);
 
         row.querySelector(".list").innerHTML += `
           <div class="card" data-title="${movie.title}" onclick="openMovie('${movie.id}')">

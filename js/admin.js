@@ -1,45 +1,4 @@
 // ==============================
-// GLOBAL STATE
-// ==============================
-let currentUser = null;
-
-// ==============================
-// NOTIFICATIONS
-// ==============================
-function notify(message, type = "info") {
-  const n = document.createElement("div");
-  n.className = `notification ${type}`;
-  n.textContent = message;
-  document.body.appendChild(n);
-  setTimeout(() => n.remove(), 3000);
-}
-
-// ==============================
-// ADMIN LOGIN
-// ==============================
-function adminLogin() {
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value.trim();
-
-  if (!email || !password) { notify("Enter email and password", "error"); return; }
-
-  auth.signInWithEmailAndPassword(email, password)
-    .then(({ user }) => {
-      if (user.uid !== ADMIN_UID) {
-        notify("Not authorized as admin", "error");
-        auth.signOut();
-        return;
-      }
-      currentUser = user;
-      document.getElementById("panel").classList.remove("hidden");
-      document.getElementById("login").style.display = "none";
-      loadAdminMovies(); // ✅ Defined below
-      notify("Admin logged in ✅", "success");
-    })
-    .catch(err => notify("Login failed: " + err.message, "error"));
-}
-
-// ==============================
 // UPLOAD VIDEO (WITH OPTIONAL THUMBNAIL)
 // ==============================
 function uploadVideo() {
@@ -58,9 +17,16 @@ function uploadVideo() {
   const progressBar = document.getElementById("progress-bar");
   const progressText = document.getElementById("progress-text");
 
+  // Reset progress UI
   progressBox.classList.remove("hidden");
   progressBar.style.width = "0%";
   progressText.textContent = "Uploading 0%";
+
+  // Helper: auto-generate thumbnail from video URL
+  function generateThumbnailFromVideo(videoUrl) {
+    const fileName = videoUrl.split("/").pop().replace(".mp4", ".jpg");
+    return `https://res.cloudinary.com/${CLOUD_NAME}/video/upload/so_1,w_400/${fileName}`;
+  }
 
   // --------------------------
   // UPLOAD VIDEO FIRST
@@ -81,11 +47,17 @@ function uploadVideo() {
   };
 
   xhr.onload = () => {
-    if (xhr.status !== 200) { notify("Video upload failed", "error"); return; }
-    const result = JSON.parse(xhr.responseText);
-    if (!result.secure_url) { notify("Invalid Cloudinary response", "error"); return; }
-
-    const videoUrl = result.secure_url;
+    if (xhr.status !== 200) { notify("Video upload failed", "error"); resetProgress(); return; }
+    let videoUrl;
+    try {
+      const result = JSON.parse(xhr.responseText);
+      videoUrl = result.secure_url;
+      if (!videoUrl) throw new Error("Invalid video URL");
+    } catch (err) {
+      notify("Video upload parse failed", "error");
+      resetProgress();
+      return;
+    }
 
     // --------------------------
     // UPLOAD THUMBNAIL IF EXISTS
@@ -107,21 +79,40 @@ function uploadVideo() {
       };
 
       thumbXhr.onload = () => {
-        const thumbResult = JSON.parse(thumbXhr.responseText);
-        const thumbnailUrl = thumbResult.secure_url;
-
+        let thumbnailUrl;
+        try {
+          const thumbResult = JSON.parse(thumbXhr.responseText);
+          thumbnailUrl = thumbResult.secure_url || generateThumbnailFromVideo(videoUrl);
+        } catch (err) {
+          notify("Thumbnail upload failed, using auto screenshot", "info");
+          thumbnailUrl = generateThumbnailFromVideo(videoUrl);
+        }
         saveMovieToFirestore(title, category, description, featured, videoUrl, thumbnailUrl);
       };
 
-      thumbXhr.onerror = () => notify("Thumbnail upload failed", "error");
+      thumbXhr.onerror = () => {
+        notify("Thumbnail upload failed, using auto screenshot", "info");
+        saveMovieToFirestore(title, category, description, featured, videoUrl, generateThumbnailFromVideo(videoUrl));
+      };
+
       thumbXhr.send(thumbData);
     } else {
-      saveMovieToFirestore(title, category, description, featured, videoUrl, null);
+      // No custom thumbnail → use auto screenshot
+      saveMovieToFirestore(title, category, description, featured, videoUrl, generateThumbnailFromVideo(videoUrl));
     }
   };
 
-  xhr.onerror = () => notify("Network error", "error");
+  xhr.onerror = () => { notify("Network error during video upload", "error"); resetProgress(); };
   xhr.send(data);
+
+  // --------------------------
+  // RESET PROGRESS FUNCTION
+  // --------------------------
+  function resetProgress() {
+    progressBar.style.width = "0%";
+    progressText.textContent = "";
+    progressBox.classList.add("hidden");
+  }
 }
 
 // ==============================
@@ -133,16 +124,25 @@ function saveMovieToFirestore(title, category, description, featured, videoUrl, 
     category,
     description,
     url: videoUrl,
-    ...(thumbnailUrl && { thumbnail: thumbnailUrl }),
+    thumbnail: thumbnailUrl,
     featured,
     timestamp: firebase.firestore.FieldValue.serverTimestamp(),
     views: 0,
     downloads: 0
   }).then(() => {
+    // Reset inputs & progress
+    const progressBox = document.getElementById("progress-container");
     const progressBar = document.getElementById("progress-bar");
     const progressText = document.getElementById("progress-text");
+
     progressBar.style.width = "100%";
     progressText.textContent = "Upload complete ✅";
+
+    setTimeout(() => {
+      progressBar.style.width = "0%";
+      progressText.textContent = "";
+      progressBox.classList.add("hidden");
+    }, 1000);
 
     document.getElementById("videoFile").value = "";
     document.getElementById("thumbnailFile").value = "";
@@ -154,111 +154,3 @@ function saveMovieToFirestore(title, category, description, featured, videoUrl, 
     notify("Movie uploaded successfully", "success");
   }).catch(err => notify("Firestore error: " + err.message, "error"));
 }
-
-// ==============================
-// LOAD ADMIN MOVIES
-// ==============================
-function loadAdminMovies() {
-  const list = document.getElementById("movieList");
-  list.innerHTML = "Loading...";
-
-  db.collection("movies").orderBy("timestamp", "desc")
-    .onSnapshot(snapshot => {
-      list.innerHTML = "";
-
-      snapshot.forEach(doc => {
-        const movie = doc.data();
-        const id = doc.id;
-
-        const item = document.createElement("div");
-        item.className = "admin-movie";
-
-        item.innerHTML = `
-          <div class="movie-header">
-            <span class="movie-title">${movie.title}</span>
-            <div class="header-actions">
-              <label>
-                <input type="checkbox" ${movie.featured ? "checked" : ""}> Featured
-              </label>
-              <button class="toggle-details">▸</button>
-              <button class="delete-btn">Delete</button>
-            </div>
-          </div>
-
-          <div class="movie-details hidden">
-            <input type="text" class="edit-title" value="${movie.title}">
-            <input type="text" class="edit-category" value="${movie.category}">
-            <textarea class="edit-description">${movie.description || ''}</textarea>
-            <button class="save-btn">Save Changes</button>
-            <div class="analytics">
-              <span>Views: ${movie.views || 0}</span>
-              <span>Downloads: ${movie.downloads || 0}</span>
-            </div>
-          </div>
-        `;
-
-        // Toggle details
-        const toggleBtn = item.querySelector(".toggle-details");
-        const details = item.querySelector(".movie-details");
-        toggleBtn.onclick = () => details.classList.toggle("hidden");
-
-        // Featured toggle
-        item.querySelector("input[type=checkbox]").onchange = e => toggleFeatured(id, e.target.checked);
-
-        // Save inline edits
-        item.querySelector(".save-btn").onclick = () => {
-          const updatedTitle = item.querySelector(".edit-title").value.trim();
-          const updatedCategory = item.querySelector(".edit-category").value.trim();
-          const updatedDescription = item.querySelector(".edit-description").value.trim();
-
-          if (!updatedTitle || !updatedCategory) { notify("Title and category cannot be empty", "error"); return; }
-
-          db.collection("movies").doc(id).update({
-            title: updatedTitle,
-            category: updatedCategory,
-            description: updatedDescription
-          }).then(() => notify("Movie updated ✅", "success"))
-            .catch(err => notify("Update failed: " + err.message, "error"));
-        };
-
-        // Delete movie
-        item.querySelector(".delete-btn").onclick = () => {
-          if (confirm("Delete this movie?")) {
-            db.collection("movies").doc(id).delete();
-            notify("Movie deleted", "info");
-          }
-        };
-
-        list.appendChild(item);
-      });
-    });
-}
-
-// ==============================
-// FEATURED TOGGLE (ONLY ONE HERO)
-// ==============================
-function toggleFeatured(movieId, value) {
-  if (!value) {
-    db.collection("movies").doc(movieId).update({ featured: false });
-    return;
-  }
-
-  db.collection("movies").where("featured", "==", true)
-    .get()
-    .then(snapshot => {
-      const batch = db.batch();
-      snapshot.forEach(doc => batch.update(doc.ref, { featured: false }));
-      batch.update(db.collection("movies").doc(movieId), { featured: true });
-      return batch.commit();
-    }).then(() => notify("Featured movie updated", "success"));
-}
-
-// ==============================
-// AUTH STATE
-// ==============================
-auth.onAuthStateChanged(user => {
-  if (user && user.uid === ADMIN_UID) {
-    currentUser = user;
-    loadAdminMovies();
-  }
-});
