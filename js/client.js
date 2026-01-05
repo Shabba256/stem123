@@ -11,129 +11,111 @@ const searchInput = document.getElementById("quick-search");
 // ==============================
 // NOTIFICATIONS
 // ==============================
-function notify(msg, type = "info") {
-  const n = document.createElement("div");
-  n.className = `notification ${type}`;
-  n.textContent = msg;
+function notify(msg,type="info"){
+  const n=document.createElement("div");
+  n.className=`notification ${type}`;
+  n.textContent=msg;
   document.body.appendChild(n);
-  setTimeout(() => n.remove(), 3000);
+  setTimeout(()=>n.remove(),3000);
 }
 
 // ==============================
 // HERO SLIDER
 // ==============================
-let heroMovies = [];
-let currentHeroIndex = 0;
-let heroInterval = null;
+let heroMovies=[];
+let currentHeroIndex=0;
+let heroInterval=null;
 
-db.collection("movies")
-  .where("featured", "==", true)
-  .orderBy("timestamp", "desc")
+db.collection("movies").where("featured","==",true)
+  .orderBy("timestamp","desc")
   .get()
-  .then(snapshot => {
-    snapshot.forEach(doc => heroMovies.push({ ...doc.data(), id: doc.id }));
-    if (!heroMovies.length) return;
+  .then(snapshot=>{
+    snapshot.forEach(doc=>heroMovies.push({...doc.data(),id:doc.id}));
+    if(!heroMovies.length) return;
     renderHero(heroMovies[0]);
-    if (heroMovies.length > 1) heroInterval = setInterval(nextHero, 7000);
-  })
-  .catch(err => console.error("Hero load error:", err));
+    if(heroMovies.length>1) heroInterval=setInterval(nextHero,7000);
+  }).catch(err=>console.error("Hero load error:",err));
 
-function nextHero() {
-  currentHeroIndex = (currentHeroIndex + 1) % heroMovies.length;
+function nextHero(){
+  currentHeroIndex=(currentHeroIndex+1)%heroMovies.length;
   renderHero(heroMovies[currentHeroIndex]);
 }
 
-function renderHero(movie) {
-  const fileName = movie.url.split("/").pop();
-
-  // Use custom thumbnail if available, otherwise generate auto screenshot via Cloudinary
-  const bg = movie.thumbnail
-    ? movie.thumbnail
-    : `https://res.cloudinary.com/dagxhzebg/video/upload/f_jpg,c_fill,w_1280/${fileName.replace(".mp4", ".jpg")}`;
-
+function renderHero(movie){
+  const bg=movie.thumbnail; // Always use poster
   hero.classList.remove("hero-animate");
 
-  setTimeout(() => {
-    hero.style.backgroundImage = `
+  setTimeout(()=>{
+    hero.style.backgroundImage=`
       linear-gradient(to top, rgba(0,0,0,0.95), rgba(0,0,0,0.4)),
       url("${bg}")
     `;
-    heroTitle.textContent = movie.title;
-    heroDesc.textContent = movie.description || "Watch now";
-    playBtn.onclick = () => {
-      window.open(movie.url, "_blank");
+    heroTitle.textContent=movie.title;
+    heroDesc.textContent=movie.description||"Watch now";
+    playBtn.onclick=()=>{
+      window.open(movie.url,"_blank");
       incrementViews(movie.id);
     };
     hero.classList.add("hero-animate");
-  }, 200);
+  },200);
 
   // Pause slider on hover
-  hero.onmouseenter = () => heroInterval && clearInterval(heroInterval);
-  hero.onmouseleave = () => {
-    if (heroMovies.length > 1) heroInterval = setInterval(nextHero, 7000);
+  hero.onmouseenter=()=>heroInterval&&clearInterval(heroInterval);
+  hero.onmouseleave=()=>{
+    if(heroMovies.length>1) heroInterval=setInterval(nextHero,7000);
   };
 }
 
 // ==============================
 // MOVIE LISTINGS
 // ==============================
-db.collection("movies")
-  .orderBy("timestamp", "desc")
-  .get()
-  .then(snapshot => {
-    const grouped = {};
-    snapshot.forEach(doc => {
-      const movie = doc.data();
-      if (!grouped[movie.category]) grouped[movie.category] = [];
-      grouped[movie.category].push({ ...movie, id: doc.id });
+db.collection("movies").orderBy("timestamp","desc").get()
+.then(snapshot=>{
+  const grouped={};
+  snapshot.forEach(doc=>{
+    const movie=doc.data();
+    if(!grouped[movie.category]) grouped[movie.category]=[];
+    grouped[movie.category].push({...movie,id:doc.id});
+  });
+
+  for(const category in grouped){
+    const row=document.createElement("div");
+    row.className="row";
+    row.innerHTML=`<h2>${category}</h2><div class="list"></div>`;
+
+    grouped[category].forEach(movie=>{
+      const thumbUrl=movie.thumbnail; // Always poster
+      row.querySelector(".list").innerHTML+=`
+        <div class="card" data-title="${movie.title}" onclick="openMovie('${movie.id}')">
+          <img src="${thumbUrl}" alt="${movie.title}" loading="lazy"/>
+        </div>
+      `;
     });
 
-    for (const category in grouped) {
-      const row = document.createElement("div");
-      row.className = "row";
-      row.innerHTML = `<h2>${category}</h2><div class="list"></div>`;
-
-      grouped[category].forEach(movie => {
-        const fileName = movie.url.split("/").pop();
-        const thumbUrl = movie.thumbnail
-          ? movie.thumbnail
-          : `https://res.cloudinary.com/dagxhzebg/video/upload/f_jpg,c_fill,w_400/${fileName.replace(".mp4", ".jpg")}`;
-
-        row.querySelector(".list").innerHTML += `
-          <div class="card" data-title="${movie.title}" onclick="openMovie('${movie.id}')">
-            <img src="${thumbUrl}" alt="${movie.title}" loading="lazy"/>
-          </div>
-        `;
-      });
-
-      content.appendChild(row);
-    }
-  })
-  .catch(err => console.error("Listing error:", err));
+    content.appendChild(row);
+  }
+}).catch(err=>console.error("Listing error:",err));
 
 // ==============================
 // OPEN MOVIE PAGE
 // ==============================
-function openMovie(movieId) {
-  window.location.href = `movie.html?id=${movieId}`;
-}
+function openMovie(movieId){ window.location.href=`movie.html?id=${movieId}`; }
 
 // ==============================
 // INCREMENT VIEWS
 // ==============================
-function incrementViews(movieId) {
-  db.collection("movies").doc(movieId).update({
-    views: firebase.firestore.FieldValue.increment(1)
-  }).catch(() => notify("Failed to increment views", "error"));
+function incrementViews(movieId){
+  db.collection("movies").doc(movieId).update({ views:firebase.firestore.FieldValue.increment(1) })
+    .catch(()=>notify("Failed to increment views","error"));
 }
 
 // ==============================
 // QUICK SEARCH
 // ==============================
-searchInput.addEventListener("input", () => {
-  const filter = searchInput.value.toLowerCase();
-  document.querySelectorAll(".card").forEach(card => {
-    const title = card.getAttribute("data-title").toLowerCase();
-    card.style.display = title.includes(filter) ? "block" : "none";
+searchInput.addEventListener("input",()=>{
+  const filter=searchInput.value.toLowerCase();
+  document.querySelectorAll(".card").forEach(card=>{
+    const title=card.getAttribute("data-title").toLowerCase();
+    card.style.display=title.includes(filter)?"block":"none";
   });
 });
