@@ -1,118 +1,272 @@
+// ==============================
+// GLOBAL STATE
+// ==============================
 let currentUser = null;
 
-function notify(message,type="info"){
-  const n=document.createElement("div");
-  n.className=`notification ${type}`;
-  n.textContent=message;
+// ==============================
+// NOTIFICATIONS
+// ==============================
+function notify(message, type = "info") {
+  const n = document.createElement("div");
+  n.className = `notification ${type}`;
+  n.textContent = message;
   document.body.appendChild(n);
-  setTimeout(()=>n.remove(),3000);
+  setTimeout(() => n.remove(), 3000);
 }
 
-function adminLogin(){
-  const email=document.getElementById("email").value.trim();
-  const password=document.getElementById("password").value.trim();
-  if(!email||!password){ notify("Enter email and password","error"); return; }
+// ==============================
+// ADMIN LOGIN
+// ==============================
+function adminLogin() {
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value.trim();
 
-  auth.signInWithEmailAndPassword(email,password)
-    .then(({user})=>{
-      if(user.uid!==ADMIN_UID){ notify("Not authorized","error"); auth.signOut(); return; }
-      currentUser=user;
+  if (!email || !password) {
+    notify("Enter email and password", "error");
+    return;
+  }
+
+  auth.signInWithEmailAndPassword(email, password)
+    .then(({ user }) => {
+      if (user.uid !== ADMIN_UID) {
+        notify("Not authorized as admin", "error");
+        auth.signOut();
+        return;
+      }
+      currentUser = user;
       document.getElementById("panel").classList.remove("hidden");
-      document.getElementById("login").style.display="none";
+      document.getElementById("login").style.display = "none";
       loadAdminMovies();
-      notify("Admin logged in ✅","success");
+      notify("Admin logged in ✅", "success");
     })
-    .catch(err=>notify("Login failed: "+err.message,"error"));
+    .catch(err => notify("Login failed: " + err.message, "error"));
 }
 
-function uploadVideo(){
-  if(!currentUser){ notify("Admin not logged in","error"); return; }
+// ==============================
+// UPLOAD VIDEO + THUMBNAIL
+// ==============================
+function uploadVideo() {
+  if (!currentUser) { notify("Admin not logged in", "error"); return; }
 
-  const videoFile=document.getElementById("videoFile").files[0];
-  const posterFile=document.getElementById("posterFile").files[0];
-  const title=document.getElementById("title").value.trim();
-  const category=document.getElementById("category").value.trim();
-  const description=document.getElementById("description").value.trim()||"Watch the latest release now";
-  const featured=document.getElementById("featured").checked;
+  const videoFile = document.getElementById("videoFile").files[0];
+  const thumbnailFile = document.getElementById("thumbnailFile").files[0];
+  const title = document.getElementById("title").value.trim();
+  const category = document.getElementById("category").value.trim();
+  const description = document.getElementById("description").value.trim() || "Watch the latest release now";
+  const featured = document.getElementById("featured").checked;
 
-  if(!videoFile||!posterFile||!title||!category){ notify("Fill all required fields and poster is mandatory","error"); return; }
+  if (!videoFile || !title || !category) {
+    notify("Fill all required fields", "error");
+    return;
+  }
 
-  const progressBar=document.getElementById("progress-bar");
-  const progressText=document.getElementById("progress-text");
-  const progressContainer=document.getElementById("progress-container");
+  const progressBox = document.getElementById("progress-container");
+  const progressBar = document.getElementById("progress-bar");
+  const progressText = document.getElementById("progress-text");
 
-  progressContainer.classList.remove("hidden");
-  progressBar.style.width="0%";
-  progressText.textContent="Uploading 0%";
+  progressBox.classList.remove("hidden");
+  progressBar.style.width = "0%";
+  progressText.textContent = "Uploading 0%";
 
-  // Upload video
-  const videoData=new FormData();
-  videoData.append("file",videoFile);
-  videoData.append("upload_preset",UPLOAD_PRESET);
+  // -------- UPLOAD VIDEO --------
+  const videoData = new FormData();
+  videoData.append("file", videoFile);
+  videoData.append("upload_preset", UPLOAD_PRESET);
 
-  const xhr=new XMLHttpRequest();
-  xhr.open("POST",`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`);
+  const xhr = new XMLHttpRequest();
+  xhr.open("POST", `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`);
 
-  xhr.upload.onprogress=e=>{
-    if(e.lengthComputable){
-      const percent=Math.round((e.loaded/e.total)*100);
-      progressBar.style.width=percent+"%";
-      progressText.textContent=`Uploading video ${percent}%`;
+  xhr.upload.onprogress = e => {
+    if (e.lengthComputable) {
+      const percent = Math.round((e.loaded / e.total) * 100);
+      progressBar.style.width = percent + "%";
+      progressText.textContent = `Uploading video ${percent}%`;
     }
   };
 
-  xhr.onload=()=>{
-    if(xhr.status!==200){ notify("Video upload failed","error"); return; }
-    const result=JSON.parse(xhr.responseText);
-    const videoUrl=result.secure_url;
-    if(!videoUrl){ notify("Invalid video response","error"); return; }
+  xhr.onload = () => {
+    if (xhr.status !== 200) { notify("Video upload failed", "error"); return; }
+    const result = JSON.parse(xhr.responseText);
+    if (!result.secure_url) { notify("Invalid Cloudinary response", "error"); return; }
 
-    // Upload poster
-    const posterData=new FormData();
-    posterData.append("file",posterFile);
-    posterData.append("upload_preset",UPLOAD_PRESET);
+    const videoUrl = result.secure_url;
 
-    const posterXhr=new XMLHttpRequest();
-    posterXhr.open("POST",`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`);
+    // -------- UPLOAD THUMBNAIL IF PROVIDED --------
+    if (thumbnailFile) {
+      const thumbData = new FormData();
+      thumbData.append("file", thumbnailFile);
+      thumbData.append("upload_preset", UPLOAD_PRESET);
 
-    posterXhr.upload.onprogress=e=>{
-      if(e.lengthComputable){
-        const percent=Math.round((e.loaded/e.total)*100);
-        progressBar.style.width=percent+"%";
-        progressText.textContent=`Uploading poster ${percent}%`;
-      }
-    };
+      const thumbXhr = new XMLHttpRequest();
+      thumbXhr.open("POST", `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`);
 
-    posterXhr.onload=()=>{
-      const posterResult=JSON.parse(posterXhr.responseText);
-      const posterUrl=posterResult.secure_url;
-      if(!posterUrl){ notify("Poster upload failed","error"); return; }
-      saveMovieToFirestore(title,category,description,featured,videoUrl,posterUrl);
-    };
+      thumbXhr.upload.onprogress = e => {
+        if (e.lengthComputable) {
+          const percent = Math.round((e.loaded / e.total) * 100);
+          progressBar.style.width = percent + "%";
+          progressText.textContent = `Uploading thumbnail ${percent}%`;
+        }
+      };
 
-    posterXhr.onerror=()=>notify("Poster upload failed","error");
-    posterXhr.send(posterData);
+      thumbXhr.onload = () => {
+        const thumbResult = JSON.parse(thumbXhr.responseText);
+        const thumbnailUrl = thumbResult.secure_url;
+        saveMovieToFirestore(title, category, description, featured, videoUrl, thumbnailUrl);
+      };
+
+      thumbXhr.onerror = () => notify("Thumbnail upload failed", "error");
+      thumbXhr.send(thumbData);
+
+    } else {
+      // No custom thumbnail, auto-generate
+      const fileName = videoUrl.split("/").pop();
+      const autoThumb = `https://res.cloudinary.com/${CLOUD_NAME}/video/upload/so_1,w_400/${fileName.replace(".mp4",".jpg")}`;
+      saveMovieToFirestore(title, category, description, featured, videoUrl, autoThumb);
+    }
   };
 
-  xhr.onerror=()=>notify("Video upload network error","error");
+  xhr.onerror = () => notify("Video upload network error", "error");
   xhr.send(videoData);
 }
 
-function saveMovieToFirestore(title,category,description,featured,videoUrl,posterUrl){
+// ==============================
+// SAVE MOVIE TO FIRESTORE
+// ==============================
+function saveMovieToFirestore(title, category, description, featured, videoUrl, thumbnailUrl) {
   db.collection("movies").add({
-    title,category,description,url:videoUrl,thumbnail:posterUrl,featured,timestamp:firebase.firestore.FieldValue.serverTimestamp(),views:0,downloads:0
-  }).then(()=>{
-    document.getElementById("progress-bar").style.width="0%";
-    document.getElementById("progress-text").textContent="";
-    document.getElementById("progress-container").classList.add("hidden");
+    title,
+    category,
+    description,
+    url: videoUrl,
+    thumbnail: thumbnailUrl || null, // Ensure thumbnail is saved
+    featured,
+    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+    views: 0,
+    downloads: 0
+  }).then(() => {
+    const progressBar = document.getElementById("progress-bar");
+    const progressText = document.getElementById("progress-text");
+    const progressContainer = document.getElementById("progress-container");
 
-    ["videoFile","posterFile","title","category","description"].forEach(id=>document.getElementById(id).value="");
-    document.getElementById("featured").checked=false;
-    notify("Movie uploaded successfully ✅","success");
-  }).catch(err=>notify("Firestore error: "+err.message,"error"));
+    progressBar.style.width = "0%";
+    progressText.textContent = "";
+    progressContainer.classList.add("hidden");
+
+    document.getElementById("videoFile").value = "";
+    document.getElementById("thumbnailFile").value = "";
+    document.getElementById("title").value = "";
+    document.getElementById("category").value = "";
+    document.getElementById("description").value = "";
+    document.getElementById("featured").checked = false;
+
+    notify("Movie uploaded successfully", "success");
+  }).catch(err => notify("Firestore error: " + err.message, "error"));
 }
 
-// loadAdminMovies(), toggleFeatured() etc remain identical to previous admin.js
-auth.onAuthStateChanged(user=>{
-  if(user&&user.uid===ADMIN_UID){ currentUser=user; loadAdminMovies(); }
+// ==============================
+// LOAD ADMIN MOVIES
+// ==============================
+function loadAdminMovies() {
+  const list = document.getElementById("movieList");
+  list.innerHTML = "Loading...";
+
+  db.collection("movies").orderBy("timestamp", "desc")
+    .onSnapshot(snapshot => {
+      list.innerHTML = "";
+
+      snapshot.forEach(doc => {
+        const movie = doc.data();
+        const id = doc.id;
+
+        const item = document.createElement("div");
+        item.className = "admin-movie";
+
+        item.innerHTML = `
+          <div class="movie-header">
+            <span class="movie-title">${movie.title}</span>
+            <div class="header-actions">
+              <label>
+                <input type="checkbox" ${movie.featured ? "checked" : ""}> Featured
+              </label>
+              <button class="toggle-details">▸</button>
+              <button class="delete-btn">Delete</button>
+            </div>
+          </div>
+
+          <div class="movie-details hidden">
+            <input type="text" class="edit-title" value="${movie.title}">
+            <input type="text" class="edit-category" value="${movie.category}">
+            <textarea class="edit-description">${movie.description || ''}</textarea>
+            <button class="save-btn">Save Changes</button>
+            <div class="analytics">
+              <span>Views: ${movie.views || 0}</span>
+              <span>Downloads: ${movie.downloads || 0}</span>
+            </div>
+          </div>
+        `;
+
+        // Toggle details
+        const toggleBtn = item.querySelector(".toggle-details");
+        const details = item.querySelector(".movie-details");
+        toggleBtn.onclick = () => details.classList.toggle("hidden");
+
+        // Featured toggle
+        item.querySelector("input[type=checkbox]").onchange = e => toggleFeatured(id, e.target.checked);
+
+        // Save inline edits
+        item.querySelector(".save-btn").onclick = () => {
+          const updatedTitle = item.querySelector(".edit-title").value.trim();
+          const updatedCategory = item.querySelector(".edit-category").value.trim();
+          const updatedDescription = item.querySelector(".edit-description").value.trim();
+
+          if (!updatedTitle || !updatedCategory) { notify("Title and category cannot be empty", "error"); return; }
+
+          db.collection("movies").doc(id).update({
+            title: updatedTitle,
+            category: updatedCategory,
+            description: updatedDescription
+          }).then(() => notify("Movie updated ✅", "success"))
+            .catch(err => notify("Update failed: " + err.message, "error"));
+        };
+
+        // Delete movie
+        item.querySelector(".delete-btn").onclick = () => {
+          if (confirm("Delete this movie?")) {
+            db.collection("movies").doc(id).delete();
+            notify("Movie deleted", "info");
+          }
+        };
+
+        list.appendChild(item);
+      });
+    });
+}
+
+// ==============================
+// FEATURED TOGGLE (ONLY ONE HERO)
+// ==============================
+function toggleFeatured(movieId, value) {
+  if (!value) {
+    db.collection("movies").doc(movieId).update({ featured: false });
+    return;
+  }
+
+  db.collection("movies").where("featured", "==", true)
+    .get()
+    .then(snapshot => {
+      const batch = db.batch();
+      snapshot.forEach(doc => batch.update(doc.ref, { featured: false }));
+      batch.update(db.collection("movies").doc(movieId), { featured: true });
+      return batch.commit();
+    }).then(() => notify("Featured movie updated", "success"));
+}
+
+// ==============================
+// AUTH STATE
+// ==============================
+auth.onAuthStateChanged(user => {
+  if (user && user.uid === ADMIN_UID) {
+    currentUser = user;
+    loadAdminMovies();
+  }
 });

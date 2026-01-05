@@ -1,55 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Movie Detail | Stream Flix</title>
-<link rel="stylesheet" href="css/movie.css">
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Movie Detail | Stream Flix</title>
+  <link rel="stylesheet" href="css/movie.css">
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 </head>
 <body>
-<div id="movie-detail">
-  <div class="overlay"></div>
-  <div class="movie-content">
-    <h1 id="movie-title"></h1>
-    <p id="movie-desc"></p>
-    <div class="movie-actions">
-      <button id="play-btn">▶ Play</button>
-      <a id="download-btn" href="#" download>⬇ Download</a>
+  <div id="movie-detail">
+    <div class="overlay"></div>
+    <div class="movie-content">
+      <h1 id="movie-title"></h1>
+      <p id="movie-desc"></p>
+      <div class="movie-actions">
+        <button id="play-btn">▶ Play</button>
+        <a id="download-btn" href="#" download>⬇ Download</a>
+      </div>
+      <a class="back-btn" href="index.html">← Back to Home</a>
     </div>
-    <a class="back-btn" href="index.html">← Back to Home</a>
   </div>
-</div>
 
-<script src="js/config.js"></script>
-<script>
-const params=new URLSearchParams(window.location.search);
-const movieId=params.get("id");
-if(!movieId){ alert("No movie selected!"); window.location.href="index.html"; }
+  <script src="js/config.js"></script>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const movieId = params.get("id");
+    if (!movieId) {
+      alert("No movie selected!");
+      window.location.href = "index.html";
+    }
 
-const titleEl=document.getElementById("movie-title");
-const descEl=document.getElementById("movie-desc");
-const playBtn=document.getElementById("play-btn");
-const downloadBtn=document.getElementById("download-btn");
-const overlay=document.querySelector(".overlay");
+    const titleEl = document.getElementById("movie-title");
+    const descEl = document.getElementById("movie-desc");
+    const playBtn = document.getElementById("play-btn");
+    const downloadBtn = document.getElementById("download-btn");
+    const overlay = document.querySelector(".overlay");
 
-db.collection("movies").doc(movieId).get().then(doc=>{
-  if(!doc.exists){ alert("Movie not found"); window.location.href="index.html"; return; }
-  const movie=doc.data();
-  titleEl.textContent=movie.title;
-  descEl.textContent=movie.description||"Watch now";
+    db.collection("movies").doc(movieId).get()
+      .then(doc => {
+        if (!doc.exists) { alert("Movie not found"); window.location.href="index.html"; return; }
+        const movie = doc.data();
+        titleEl.textContent = movie.title;
+        descEl.textContent = movie.description || "Watch now";
+        const fileName = movie.url.split("/").pop();
+        const posterUrl = `https://res.cloudinary.com/dagxhzebg/video/upload/so_1,w_1280/${fileName.replace(".mp4",".jpg")}`;
+        overlay.style.backgroundImage = `url("${posterUrl}")`;
 
-  overlay.style.backgroundImage=`url("${movie.thumbnail}")`;
+        playBtn.onclick = () => {
+          window.open(movie.url, "_blank");
+          db.collection("movies").doc(movieId).update({ views: firebase.firestore.FieldValue.increment(1) });
+        };
 
-  playBtn.onclick=()=>{
-    window.open(movie.url,"_blank");
-    db.collection("movies").doc(movieId).update({views:firebase.firestore.FieldValue.increment(1)});
-  };
-  downloadBtn.href=movie.url;
-  downloadBtn.onclick=()=>{ db.collection("movies").doc(movieId).update({downloads:firebase.firestore.FieldValue.increment(1)}); };
-}).catch(err=>{ console.error(err); alert("Failed to load movie"); window.location.href="index.html"; });
-</script>
+        downloadBtn.href = movie.url;
+        downloadBtn.onclick = () => {
+          db.collection("movies").doc(movieId).update({ downloads: firebase.firestore.FieldValue.increment(1) });
+        };
+      })
+      .catch(err => { console.error(err); alert("Failed to load movie"); window.location.href="index.html"; });
+  </script>
 </body>
-</html>
+</html> 

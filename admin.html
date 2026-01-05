@@ -9,49 +9,98 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  
+  <style>
+    /* Notifications container */
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 12px 20px;
+      border-radius: 6px;
+      color: #fff;
+      font-weight: bold;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      opacity: 0.95;
+      z-index: 1000;
+      animation: slideIn 0.4s ease forwards;
+    }
+
+    .notification.info { background: #3498db; }
+    .notification.success { background: #2ecc71; }
+    .notification.error { background: #e74c3c; }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 0.95; }
+    }
+
+    /* Progress bar */
+    #progress-bar {
+      height: 20px;
+      width: 0%;
+      border-radius: 6px;
+      background: linear-gradient(90deg, #e50914, #ff3b3b);
+      transition: width 0.4s ease;
+    }
+
+    #progress-container {
+      width: 100%;
+      max-width: 400px;
+      background: #222;
+      border-radius: 6px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    #progress-text {
+      margin-top: 6px;
+      font-size: 14px;
+    }
+  </style>
 </head>
 <body>
 
-<h1>🎬 StreamFlix Admin Panel</h1>
+  <h1>🎬 StreamFlix Admin Panel</h1>
 
-<!-- LOGIN -->
-<div id="login">
-  <input type="email" id="email" placeholder="Admin email">
-  <input type="password" id="password" placeholder="Password">
-  <button onclick="adminLogin()">Login</button>
-</div>
-
-<!-- ADMIN PANEL -->
-<div id="panel" class="hidden">
-
-  <h2>Upload Movie</h2>
-  <input type="file" id="videoFile" accept="video/*">
-  <input type="file" id="posterFile" accept="image/*"> <!-- Poster input -->
-  <input type="text" id="title" placeholder="Movie title">
-  <input type="text" id="category" placeholder="Category (Movies, Series, Music)">
-  <textarea id="description" placeholder="Movie description"></textarea>
-
-  <label class="featured-toggle">
-    <input type="checkbox" id="featured" required>
-    <span>Set as Featured (Hero Banner)</span>
-  </label>
-
-  <button onclick="uploadVideo()">Upload</button>
-
-  <!-- Progress Bar -->
-  <div id="progress-container" class="hidden">
-    <div id="progress-bar"></div>
-    <p id="progress-text"></p>
+  <!-- LOGIN -->
+  <div id="login">
+    <input type="email" id="email" placeholder="Admin email">
+    <input type="password" id="password" placeholder="Password">
+    <button onclick="adminLogin()">Login</button>
   </div>
 
-  <hr>
+  <!-- ADMIN PANEL -->
+  <div id="panel" class="hidden">
 
-  <h2>Uploaded Movies</h2>
-  <div id="movieList"></div>
+    <h2>Upload Movie</h2>
+    <input type="file" id="videoFile" accept="video/*">
+    <input type="file" id="thumbnailFile" accept="image/*"> <!-- NEW -->
+    <input type="text" id="title" placeholder="Movie title">
+    <input type="text" id="category" placeholder="Category (Movies, Series, Music)">
+    <textarea id="description" placeholder="Movie description"></textarea>
 
-</div>
+    <label class="featured-toggle">
+      <input type="checkbox" id="featured">
+      <span>Set as Featured (Hero Banner)</span>
+    </label>
 
-<script src="js/config.js"></script>
-<script src="js/admin.js"></script>
+    <button onclick="uploadVideo()">Upload</button>
+
+    <!-- Progress Bar -->
+    <div id="progress-container" class="hidden">
+      <div id="progress-bar"></div>
+      <p id="progress-text"></p>
+    </div>
+
+    <hr>
+
+    <h2>Uploaded Movies</h2>
+    <div id="movieList"></div>
+
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/admin.js"></script>
 </body>
 </html>
