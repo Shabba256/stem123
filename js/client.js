@@ -26,6 +26,7 @@ let heroMovies = [];
 let currentHeroIndex = 0;
 let heroInterval = null;
 
+// Load featured movies
 db.collection("movies")
   .where("featured", "==", true)
   .orderBy("timestamp", "desc")
@@ -33,8 +34,12 @@ db.collection("movies")
   .then(snapshot => {
     snapshot.forEach(doc => heroMovies.push({ ...doc.data(), id: doc.id }));
     if (!heroMovies.length) return;
+
     renderHero(heroMovies[0]);
-    if (heroMovies.length > 1) heroInterval = setInterval(nextHero, 7000);
+
+    if (heroMovies.length > 1) {
+      heroInterval = setInterval(nextHero, 7000);
+    }
   })
   .catch(err => console.error("Hero load error:", err));
 
@@ -44,30 +49,34 @@ function nextHero() {
 }
 
 function renderHero(movie) {
-  const fileName = movie.url.split("/").pop();
+  const movieUrl = movie.source === "cloudinary" || movie.source === "both"
+    ? movie.cloudinaryUrl
+    : movie.teraboxUrl;
 
-  // Use custom thumbnail if available, otherwise generate auto screenshot via Cloudinary
-  const bg = movie.thumbnail
+  if (!movieUrl) return; // skip if no URL
+
+  const thumbUrl = movie.thumbnail
     ? movie.thumbnail
-    : `https://res.cloudinary.com/dagxhzebg/video/upload/f_jpg,c_fill,w_1280/${fileName.replace(".mp4", ".jpg")}`;
+    : movie.cloudinaryUrl
+    ? `https://res.cloudinary.com/dagxhzebg/video/upload/f_jpg,c_fill,w_1280/${movie.cloudinaryUrl.split("/").pop().replace(".mp4", ".jpg")}`
+    : "https://placehold.co/1280x720?text=No+Thumbnail";
 
   hero.classList.remove("hero-animate");
 
   setTimeout(() => {
     hero.style.backgroundImage = `
       linear-gradient(to top, rgba(0,0,0,0.95), rgba(0,0,0,0.4)),
-      url("${bg}")
+      url("${thumbUrl}")
     `;
     heroTitle.textContent = movie.title;
     heroDesc.textContent = movie.description || "Watch now";
     playBtn.onclick = () => {
-      window.open(movie.url, "_blank");
+      window.open(movieUrl, "_blank");
       incrementViews(movie.id);
     };
     hero.classList.add("hero-animate");
   }, 200);
 
-  // Pause slider on hover
   hero.onmouseenter = () => heroInterval && clearInterval(heroInterval);
   hero.onmouseleave = () => {
     if (heroMovies.length > 1) heroInterval = setInterval(nextHero, 7000);
@@ -82,6 +91,7 @@ db.collection("movies")
   .get()
   .then(snapshot => {
     const grouped = {};
+
     snapshot.forEach(doc => {
       const movie = doc.data();
       if (!grouped[movie.category]) grouped[movie.category] = [];
@@ -94,10 +104,17 @@ db.collection("movies")
       row.innerHTML = `<h2>${category}</h2><div class="list"></div>`;
 
       grouped[category].forEach(movie => {
-        const fileName = movie.url.split("/").pop();
+        const movieUrl = movie.source === "cloudinary" || movie.source === "both"
+          ? movie.cloudinaryUrl
+          : movie.teraboxUrl;
+
+        if (!movieUrl) return; // skip movies with no URL
+
         const thumbUrl = movie.thumbnail
           ? movie.thumbnail
-          : `https://res.cloudinary.com/dagxhzebg/video/upload/f_jpg,c_fill,w_400/${fileName.replace(".mp4", ".jpg")}`;
+          : movie.cloudinaryUrl
+          ? `https://res.cloudinary.com/dagxhzebg/video/upload/f_jpg,c_fill,w_400/${movie.cloudinaryUrl.split("/").pop().replace(".mp4", ".jpg")}`
+          : "https://placehold.co/400x225?text=No+Thumbnail";
 
         row.querySelector(".list").innerHTML += `
           <div class="card" data-title="${movie.title}" onclick="openMovie('${movie.id}')">

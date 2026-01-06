@@ -46,6 +46,8 @@ function adminLogin() {
 // UPLOAD VIDEO + THUMBNAIL
 // ==============================
 function uploadVideo() {
+  const source = document.getElementById("source").value;
+  const teraboxUrl = document.getElementById("teraboxUrl").value.trim();
   if (!currentUser) { notify("Admin not logged in", "error"); return; }
 
   const videoFile = document.getElementById("videoFile").files[0];
@@ -55,8 +57,18 @@ function uploadVideo() {
   const description = document.getElementById("description").value.trim() || "Watch the latest release now";
   const featured = document.getElementById("featured").checked;
 
-  if (!videoFile || !title || !category) {
-    notify("Fill all required fields", "error");
+  if (!title || !category) {
+  notify("Title and category are required", "error");
+  return;
+  }
+
+  if ((source === "cloudinary" || source === "both") && !videoFile) {
+    notify("Video file required for Cloudinary upload", "error");
+    return;
+  }
+
+  if ((source === "terabox" || source === "both") && !teraboxUrl) {
+    notify("Terabox link required", "error");
     return;
   }
 
@@ -69,12 +81,29 @@ function uploadVideo() {
   progressText.textContent = "Uploading 0%";
 
   // -------- UPLOAD VIDEO --------
+  // -------- UPLOAD VIDEO --------
+
+// ⛔ TERABOX ONLY → SKIP CLOUDINARY COMPLETELY
+  if (source === "terabox") {
+    saveMovieToFirestore(
+      title,
+      category,
+      description,
+      featured,
+      null, // no cloudinary video
+      null  // no thumbnail
+    );
+    return;
+  }
+
+  // ✅ CLOUDINARY OR BOTH → PROCEED WITH UPLOAD
   const videoData = new FormData();
   videoData.append("file", videoFile);
   videoData.append("upload_preset", UPLOAD_PRESET);
 
   const xhr = new XMLHttpRequest();
   xhr.open("POST", `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`);
+
 
   xhr.upload.onprogress = e => {
     if (e.lengthComputable) {
@@ -109,9 +138,25 @@ function uploadVideo() {
       };
 
       thumbXhr.onload = () => {
+        if (thumbXhr.status !== 200) {
+          notify("Thumbnail upload failed, using auto thumbnail", "info");
+
+          const fileName = videoUrl.split("/").pop();
+          const autoThumb = `https://res.cloudinary.com/${CLOUD_NAME}/video/upload/so_1,w_400/${fileName.replace(".mp4", ".jpg")}`;
+
+          saveMovieToFirestore(title, category, description, featured, videoUrl, autoThumb);
+          return;
+        }
+
         const thumbResult = JSON.parse(thumbXhr.responseText);
-        const thumbnailUrl = thumbResult.secure_url;
-        saveMovieToFirestore(title, category, description, featured, videoUrl, thumbnailUrl);
+        saveMovieToFirestore(
+          title,
+          category,
+          description,
+          featured,
+          videoUrl,
+          thumbResult.secure_url || null
+        );
       };
 
       thumbXhr.onerror = () => notify("Thumbnail upload failed", "error");
@@ -133,17 +178,25 @@ function uploadVideo() {
 // SAVE MOVIE TO FIRESTORE
 // ==============================
 function saveMovieToFirestore(title, category, description, featured, videoUrl, thumbnailUrl) {
-  db.collection("movies").add({
-    title,
-    category,
-    description,
-    url: videoUrl,
-    thumbnail: thumbnailUrl || null, // Ensure thumbnail is saved
-    featured,
-    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-    views: 0,
-    downloads: 0
-  }).then(() => {
+  const source = document.getElementById("source").value;
+const teraboxUrl = document.getElementById("teraboxUrl").value.trim();
+
+db.collection("movies").add({
+  title,
+  category,
+  description,
+
+  source, // "cloudinary" | "terabox" | "both"
+
+  cloudinaryUrl: source !== "terabox" ? videoUrl : null,
+  thumbnail: source !== "terabox" ? (thumbnailUrl || null) : null,
+  teraboxUrl: source !== "cloudinary" ? teraboxUrl : null,
+
+  featured,
+  timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+  views: 0,
+  downloads: 0
+}).then(() => {
     const progressBar = document.getElementById("progress-bar");
     const progressText = document.getElementById("progress-text");
     const progressContainer = document.getElementById("progress-container");
