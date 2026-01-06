@@ -104,6 +104,21 @@ body, html {
 
 .back-btn:hover { text-decoration: underline; }
 
+.terabox-alert {
+  background: rgba(229, 9, 20, 0.12);
+  border: 1px solid #e50914;
+  color: #fca5a5;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-top: 10px;
+}
+
+.hidden {
+  display: none;
+}
+
+
 /* ============================= */
 /* RESPONSIVE                      */
 /* ============================= */

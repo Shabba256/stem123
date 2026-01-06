@@ -32,6 +32,14 @@ db.collection("movies").doc(movieId).get()
   titleEl.textContent = movie.title;
   descEl.textContent = movie.description || "Watch now";
 
+  // Show alert only for TeraBox movies
+const teraboxAlert = document.getElementById("teraboxAlert");
+
+if (movie.source === "terabox" || movie.source === "both") {
+  teraboxAlert.classList.remove("hidden");
+}
+
+
   // ==============================
   // SOURCE URL
   // ==============================
