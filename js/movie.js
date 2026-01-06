@@ -76,9 +76,20 @@ db.collection("movies").doc(movieId).get()
   // ==============================
   downloadBtn.href = movieUrl;
   downloadBtn.onclick = () => {
-    db.collection("movies").doc(movieId).update({
-      downloads: firebase.firestore.FieldValue.increment(1)
-    });
-  };
+
+  // count download
+  db.collection("movies").doc(movieId).update({
+  downloads: firebase.firestore.FieldValue.increment(1)
+  });
+
+  // TERABOX movies → open terabx.html
+  if (movie.teraboxUrl) {
+  window.open(
+  `terabx.html?url=${encodeURIComponent(movie.teraboxUrl)}`,
+  "_blank"
+  );
+  }
+};
+
 })
 .catch(() => window.location.href = "index.html");
