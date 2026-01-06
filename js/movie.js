@@ -46,7 +46,6 @@ db.collection("movies").doc(movieId).get()
     return;
   }
 
-
   // ==============================
   // BACKGROUND (FALLBACK LOGIC)
   // ==============================
@@ -74,22 +73,26 @@ db.collection("movies").doc(movieId).get()
   // ==============================
   // DOWNLOAD
   // ==============================
-  downloadBtn.href = movieUrl;
   downloadBtn.onclick = () => {
+    // count download
+    db.collection("movies").doc(movieId).update({
+      downloads: firebase.firestore.FieldValue.increment(1)
+    });
 
-  // count download
-  db.collection("movies").doc(movieId).update({
-  downloads: firebase.firestore.FieldValue.increment(1)
-  });
-
-  // TERABOX movies → open terabx.html
-  if (movie.teraboxUrl) {
-  window.open(
-  `terabx.html?url=${encodeURIComponent(movie.teraboxUrl)}`,
-  "_blank"
-  );
-  }
-};
+    // TERABOX movies → open terabx.html with direct link
+    if (movie.teraboxDirectLink) {
+      window.open(
+        `terabx.html?url=${encodeURIComponent(movie.teraboxDirectLink)}`,
+        "_blank"
+      );
+    } else if (movie.teraboxUrl) {
+      // fallback to original teraboxUrl if direct link missing
+      window.open(
+        `terabx.html?url=${encodeURIComponent(movie.teraboxUrl)}`,
+        "_blank"
+      );
+    }
+  };
 
 })
 .catch(() => window.location.href = "index.html");

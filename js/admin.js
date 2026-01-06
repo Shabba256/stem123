@@ -72,6 +72,12 @@ function uploadVideo() {
     return;
   }
 
+  if ((source === "terabox" || source === "both") && !document.getElementById("teraboxDirectLink").value.trim()) {
+    notify("Direct Terabox link required", "error");
+    return;
+  }
+
+
   const progressBox = document.getElementById("progress-container");
   const progressBar = document.getElementById("progress-bar");
   const progressText = document.getElementById("progress-text");
@@ -179,41 +185,45 @@ function uploadVideo() {
 // ==============================
 function saveMovieToFirestore(title, category, description, featured, videoUrl, thumbnailUrl) {
   const source = document.getElementById("source").value;
-const teraboxUrl = document.getElementById("teraboxUrl").value.trim();
+  const teraboxUrl = document.getElementById("teraboxUrl").value.trim();
+  const teraboxDirectLink = document.getElementById("teraboxDirectLink").value.trim(); // ✅ new field
 
-db.collection("movies").add({
-  title,
-  category,
-  description,
+  db.collection("movies").add({
+    title,
+    category,
+    description,
 
-  source, // "cloudinary" | "terabox" | "both"
+    source, // "cloudinary" | "terabox" | "both"
 
-  cloudinaryUrl: source !== "terabox" ? videoUrl : null,
-  thumbnail: source !== "terabox" ? (thumbnailUrl || null) : null,
-  teraboxUrl: source !== "cloudinary" ? teraboxUrl : null,
+    cloudinaryUrl: source !== "terabox" ? videoUrl : null,
+    thumbnail: source !== "terabox" ? (thumbnailUrl || null) : null,
+    teraboxUrl: source !== "cloudinary" ? teraboxUrl : null,
+    teraboxDirectLink: source !== "cloudinary" ? teraboxDirectLink : null, // ✅ save direct link
 
-  featured,
-  timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-  views: 0,
-  downloads: 0
-}).then(() => {
-    const progressBar = document.getElementById("progress-bar");
-    const progressText = document.getElementById("progress-text");
-    const progressContainer = document.getElementById("progress-container");
+    featured,
+    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+    views: 0,
+    downloads: 0
+  }).then(() => {
+      const progressBar = document.getElementById("progress-bar");
+      const progressText = document.getElementById("progress-text");
+      const progressContainer = document.getElementById("progress-container");
 
-    progressBar.style.width = "0%";
-    progressText.textContent = "";
-    progressContainer.classList.add("hidden");
+      progressBar.style.width = "0%";
+      progressText.textContent = "";
+      progressContainer.classList.add("hidden");
 
-    document.getElementById("videoFile").value = "";
-    document.getElementById("thumbnailFile").value = "";
-    document.getElementById("title").value = "";
-    document.getElementById("category").value = "";
-    document.getElementById("description").value = "";
-    document.getElementById("featured").checked = false;
+      document.getElementById("videoFile").value = "";
+      document.getElementById("thumbnailFile").value = "";
+      document.getElementById("title").value = "";
+      document.getElementById("category").value = "";
+      document.getElementById("description").value = "";
+      document.getElementById("featured").checked = false;
+      document.getElementById("teraboxUrl").value = "";
+      document.getElementById("teraboxDirectLink").value = ""; // ✅ reset input
 
-    notify("Movie uploaded successfully", "success");
-  }).catch(err => notify("Firestore error: " + err.message, "error"));
+      notify("Movie uploaded successfully", "success");
+    }).catch(err => notify("Firestore error: " + err.message, "error"));
 }
 
 // ==============================

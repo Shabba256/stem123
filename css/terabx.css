@@ -6,74 +6,45 @@ body {
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  margin: 0;
-  padding: 16px;
-  box-sizing: border-box;
 }
 
 .box {
   background: #020617;
-  padding: 32px 24px;
-  border-radius: 12px;
+  padding: 24px;
+  border-radius: 10px;
   max-width: 420px;
   width: 100%;
   text-align: center;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.7);
-  transition: all 0.3s ease;
 }
 
-h2 {
-  margin-bottom: 12px;
-  font-size: 24px;
-  color: #e5e7eb;
-}
+h2 { margin-bottom: 10px; }
+p { font-size: 14px; color: #94a3b8; }
 
-p {
+input#directLink {
+  width: 100%;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #333;
+  margin-bottom: 10px;
+  background: #111;
+  color: #fff;
   font-size: 14px;
-  color: #94a3b8;
-  margin-bottom: 20px;
+  text-align: center;
 }
 
-a.btn {
+button, a.btn {
   display: block;
-  margin-top: 14px;
-  padding: 14px 0;
-  border-radius: 8px;
+  margin: 8px 0;
+  padding: 12px;
+  border-radius: 6px;
   text-decoration: none;
   font-weight: bold;
-  color: #fff;
-  transition: transform 0.2s, box-shadow 0.2s;
+  color: white;
+  cursor: pointer;
+  border: none;
+  font-size: 14px;
 }
 
-a.btn:hover {
-  transform: scale(1.05);
-  box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-}
-
-.terabox {
-  background: #2563eb;
-}
-
-.downloader {
-  background: #16a34a;
-}
-
-/* Responsive adjustments */
-@media (max-width: 480px) {
-  .box {
-    padding: 24px 16px;
-  }
-
-  h2 {
-    font-size: 20px;
-  }
-
-  p {
-    font-size: 13px;
-  }
-
-  a.btn {
-    padding: 12px 0;
-    font-size: 14px;
-  }
-}
+/* Colors */
+button#copyBtn { background: #16a34a; }     /* green */
+a#downloaderBtn { background: #2563eb; }    /* blue */
