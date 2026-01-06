@@ -4,6 +4,16 @@
 let currentUser = null;
 
 // ==============================
+// CATEGORY VALIDATION (LOCKED)
+// ==============================
+const ALLOWED_CATEGORIES = ["Movies", "Series"];
+
+function isValidCategory(cat) {
+  return ALLOWED_CATEGORIES.includes(cat);
+}
+
+
+// ==============================
 // NOTIFICATIONS
 // ==============================
 function notify(message, type = "info") {
@@ -60,6 +70,11 @@ function uploadVideo() {
   if (!title || !category) {
   notify("Title and category are required", "error");
   return;
+  }
+
+  if (!isValidCategory(category)) {
+    notify("Category must be Movies or Series ONLY", "error");
+    return;
   }
 
   if ((source === "cloudinary" || source === "both") && !videoFile) {
@@ -282,8 +297,17 @@ function loadAdminMovies() {
           const updatedCategory = item.querySelector(".edit-category").value.trim();
           const updatedDescription = item.querySelector(".edit-description").value.trim();
 
-          if (!updatedTitle || !updatedCategory) { notify("Title and category cannot be empty", "error"); return; }
+          if (!updatedTitle || !updatedCategory) {
+            notify("Title and category cannot be empty", "error");
+            return;
+          }
 
+          if (!isValidCategory(updatedCategory)) {
+            notify("Category must be Movies or Series ONLY", "error");
+            return;
+          }
+
+          
           db.collection("movies").doc(id).update({
             title: updatedTitle,
             category: updatedCategory,

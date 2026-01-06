@@ -77,7 +77,11 @@
     <input type="file" id="videoFile" accept="video/*">
     <input type="file" id="thumbnailFile" accept="image/*"> <!-- NEW -->
     <input type="text" id="title" placeholder="Movie title">
-    <input type="text" id="category" placeholder="Category (Movies, Series, Music)">
+    <select id="category">
+      <option value="">Select category</option>
+      <option value="Movies">Movies</option>
+      <option value="Series">Series</option>
+    </select>
     <textarea id="description" placeholder="Movie description"></textarea>
     <select id="source">
       <option value="cloudinary">Cloudinary (Streaming)</option>

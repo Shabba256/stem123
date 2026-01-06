@@ -7,6 +7,8 @@ const heroDesc = document.getElementById("hero-desc");
 const playBtn = document.getElementById("play-btn");
 const content = document.getElementById("content");
 const searchInput = document.getElementById("quick-search");
+const ALLOWED_CATEGORIES = ["Movies", "Series"];
+
 
 // ==============================
 // NOTIFICATIONS
@@ -94,6 +96,10 @@ db.collection("movies")
 
     snapshot.forEach(doc => {
       const movie = doc.data();
+
+      // 🔒 Only allow Movies & Series
+      if (!ALLOWED_CATEGORIES.includes(movie.category)) return;
+
       if (!grouped[movie.category]) grouped[movie.category] = [];
       grouped[movie.category].push({ ...movie, id: doc.id });
     });
