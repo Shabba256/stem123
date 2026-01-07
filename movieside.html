@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>All Movies | StreamFlix</title>
+  <link rel="stylesheet" href="css/sidepage.css">
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="navbar-left">
+      <div class="logo">Stream Flix</div>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="movieside.html">Movies</a>
+        <a href="serieside.html">Series</a>
+      </div>
+    </div>
+    <div class="navbar-right">
+      <input type="text" id="quick-search" placeholder="Search movies...">
+    </div>
+  </nav>
+
+  <div id="content"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/sidepage.js"></script>
+</body>
+</html>
