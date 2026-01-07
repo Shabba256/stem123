@@ -107,7 +107,14 @@ db.collection("movies")
     for (const category in grouped) {
       const row = document.createElement("div");
       row.className = "row";
-      row.innerHTML = `<h2>${category}</h2><div class="list"></div>`;
+      row.innerHTML = `
+        <div class="row-header">
+          <h2>${category}</h2>
+          <a href="${category === 'Movies' ? 'movieside.html' : 'serieside.html'}" class="see-more">See More</a>
+        </div>
+        <div class="list"></div>
+      `;
+
 
       grouped[category].slice(0, 8).forEach(movie => {
         const movieUrl = movie.source === "cloudinary" || movie.source === "both"

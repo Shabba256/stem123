@@ -39,6 +39,48 @@ header, .navbar {
 }
 .navbar-right input#quick-search:focus { outline: none; width: 260px; border-color: #e50914; }
 
+/* Navbar dropdown */
+.dropdown { position: relative; display: inline-block; }
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #111;
+  min-width: 140px;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.6);
+  z-index: 1000;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.dropdown-content a {
+  color: #fff;
+  padding: 10px 14px;
+  text-decoration: none;
+  display: block;
+}
+.dropdown-content a:hover { background-color: #222; }
+.dropdown:hover .dropdown-content { display: block; }
+
+/* Row header with See More link */
+.row-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.row-header h2 {
+  font-size: 24px;
+  border-left: 4px solid #e50914;
+  padding-left: 12px;
+}
+.see-more {
+  font-size: 14px;
+  color: #fff;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.see-more:hover { color: #e50914; }
+
+
 /* HERO */
 #hero {
   height: 75vh;
