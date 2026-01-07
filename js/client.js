@@ -109,7 +109,7 @@ db.collection("movies")
       row.className = "row";
       row.innerHTML = `<h2>${category}</h2><div class="list"></div>`;
 
-      grouped[category].forEach(movie => {
+      grouped[category].slice(0, 8).forEach(movie => {
         const movieUrl = movie.source === "cloudinary" || movie.source === "both"
           ? movie.cloudinaryUrl
           : movie.teraboxUrl;
