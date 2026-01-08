@@ -1,6 +1,7 @@
 /* ============================= */
 /* SIDE PAGE GLOBAL STYLES       */
 /* ============================= */
+
 body {
   margin: 0;
   font-family: Arial, sans-serif;
@@ -8,7 +9,10 @@ body {
   color: #fff;
 }
 
-/* NAVBAR */
+/* ============================= */
+/* NAVBAR                        */
+/* ============================= */
+
 .navbar {
   position: sticky;
   top: 0;
@@ -20,24 +24,31 @@ body {
   padding: 12px 40px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.5);
 }
+
 .navbar-left {
   display: flex;
   align-items: center;
   gap: 24px;
 }
+
 .logo {
   font-size: 28px;
   font-weight: 800;
   color: #e50914;
   cursor: pointer;
 }
+
 .nav-links a {
   color: #fff;
   text-decoration: none;
   font-size: 16px;
   margin-right: 12px;
 }
-.nav-links a:hover { color: #e50914; }
+
+.nav-links a:hover {
+  color: #e50914;
+}
+
 .navbar-right input#quick-search {
   padding: 6px 12px;
   border-radius: 6px;
@@ -47,108 +58,143 @@ body {
   width: 180px;
   transition: width 0.3s ease;
 }
-.navbar-right input#quick-search:focus { outline: none; width: 260px; border-color: #e50914; }
 
-/* ROWS */
+.navbar-right input#quick-search:focus {
+  outline: none;
+  width: 260px;
+  border-color: #e50914;
+}
+
+/* ============================= */
+/* ROW + SECTION HEADER          */
+/* ============================= */
+
 .row {
   padding: 30px 40px;
 }
+
 .row h2 {
   font-size: 24px;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
   border-left: 4px solid #e50914;
   padding-left: 12px;
 }
 
-/* GRID 4x2 */
-.grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-}
-.card {
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.6);
-  height: 280px;
-  position: relative;
-  cursor: pointer;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-.card:hover {
-  transform: scale(1.05);
-  box-shadow: 0 20px 50px rgba(0,0,0,0.9);
-}
-.card img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-.card::after {
-  content: attr(data-title);
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: rgba(0,0,0,0.7);
-  color: #fff;
-  padding: 6px;
-  font-size: 14px;
-  text-align: center;
-}
-
 /* ============================= */
-/* CLIENT.CSS - MOBILE RESPONSIVE */
+/* MOVIE GRID                    */
 /* ============================= */
-
-/* Existing global styles stay as-is, just update the .list and .card grids for mobile responsiveness */
 
 .list {
   display: grid;
-  grid-template-columns: repeat(4, 1fr); /* 4 per row on desktop */
+  grid-template-columns: repeat(4, 1fr); /* Desktop: 4 per row */
   gap: 20px;
 }
 
-/* Movie Cards */
+/* ============================= */
+/* MOVIE CARD                    */
+/* ============================= */
+
 .card {
   width: 100%;
   height: 320px;
   border-radius: 12px;
   overflow: hidden;
+  background: #111;
   box-shadow: 0 15px 35px rgba(0,0,0,0.75);
   position: relative;
   cursor: pointer;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-/* Hover effect */
 .card:hover {
-  transform: scale(1.1);
-  box-shadow:0 20px 50px rgba(0,0,0,0.9);
+  transform: scale(1.08);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.9);
 }
 
-/* Responsive Grids */
+.card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Title overlay */
+.card::after {
+  content: attr(data-title);
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0,0,0,0.75);
+  color: #fff;
+  padding: 8px;
+  font-size: 14px;
+  text-align: center;
+}
+
+/* ============================= */
+/* LOAD MORE BUTTON              */
+/* ============================= */
+
+.load-more-wrapper {
+  display: flex;
+  justify-content: center;
+  margin: 40px 0;
+}
+
+#loadMoreBtn {
+  background: #e50914;
+  color: #fff;
+  border: none;
+  padding: 12px 26px;
+  font-size: 16px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+#loadMoreBtn:hover {
+  background: #f6121d;
+}
+
+#loadMoreBtn:disabled {
+  background: #555;
+  cursor: not-allowed;
+}
+
+/* ============================= */
+/* RESPONSIVE — CSS ONLY         */
+/* ============================= */
+
 @media (max-width: 1024px) {
   .list {
-    grid-template-columns: repeat(2, 1fr); /* 2 per row on tablets */
+    grid-template-columns: repeat(2, 1fr); /* Tablets */
   }
 
-  .card { height: 280px; }
+  .card {
+    height: 280px;
+  }
 }
 
 @media (max-width: 768px) {
-  .list {
-    grid-template-columns: repeat(2, 1fr); /* 2 per row on phones */
+  .navbar {
+    padding: 12px 20px;
   }
 
-  .card { height: 240px; }
+  .row {
+    padding: 24px 20px;
+  }
+
+  .list {
+    grid-template-columns: repeat(2, 1fr); /* Phones */
+  }
+
+  .card {
+    height: 240px;
+  }
 }
 
 @media (max-width: 480px) {
-  .list {
-    grid-template-columns: repeat(2, 1fr); /* 2 per row even on very small screens */
+  .card {
+    height: 220px;
   }
-
-  .card { height: 220px; }
 }

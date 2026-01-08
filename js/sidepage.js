@@ -1,10 +1,18 @@
 const content = document.getElementById("content");
 const searchInput = document.getElementById("quick-search");
 
-// Determine page type
-const PAGE_TYPE = window.location.pathname.includes("series") ? "Series" : "Movies";
+// Detect page type
+const PAGE_TYPE = window.location.pathname.includes("series")
+  ? "Series"
+  : "Movies";
 
-// Notifications
+const PAGE_SIZE = 16;
+let lastDoc = null;
+let isEnd = false;
+
+// ------------------------------
+// NOTIFICATION
+// ------------------------------
 function notify(msg, type = "info") {
   const n = document.createElement("div");
   n.className = `notification ${type}`;
@@ -13,55 +21,102 @@ function notify(msg, type = "info") {
   setTimeout(() => n.remove(), 3000);
 }
 
-// Render a single movie/series card
+// ------------------------------
+// RENDER CARD
+// ------------------------------
 function renderCard(movie) {
-  const thumbUrl = movie.thumbnail || movie.cloudinaryUrl
-    ? `https://res.cloudinary.com/dagxhzebg/video/upload/f_jpg,c_fill,w_400/${movie.cloudinaryUrl?.split("/").pop().replace(".mp4", ".jpg")}`
-    : "https://placehold.co/400x225?text=No+Thumbnail";
+  let thumb = "https://placehold.co/400x600?text=No+Thumbnail";
+
+  if (movie.thumbnail) {
+    thumb = movie.thumbnail;
+  } else if (movie.cloudinaryUrl) {
+    const file = movie.cloudinaryUrl.split("/").pop();
+    thumb = `https://res.cloudinary.com/dagxhzebg/video/upload/f_jpg,c_fill,w_400/${file.replace(".mp4", ".jpg")}`;
+  }
 
   return `
     <div class="card" data-title="${movie.title}" onclick="openMovie('${movie.id}')">
-      <img src="${thumbUrl}" alt="${movie.title}" loading="lazy"/>
+      <img src="${thumb}" alt="${movie.title}" loading="lazy" />
     </div>
   `;
 }
 
-// Open movie/series page
+// ------------------------------
+// OPEN MOVIE
+// ------------------------------
 function openMovie(id) {
   window.location.href = `movie.html?id=${id}`;
 }
 
-// Load movies/series from Firestore in real-time
-db.collection("movies")
-  .orderBy("timestamp", "desc")
-  .onSnapshot(snapshot => {
-    const filtered = [];
-    snapshot.forEach(doc => {
-      const movie = doc.data();
-      movie.id = doc.id;
-      if (movie.category === PAGE_TYPE) filtered.push(movie);
-    });
+// ------------------------------
+// LOAD MOVIES (PAGINATED)
+// ------------------------------
+async function loadMovies() {
+  if (isEnd) return;
 
-    // Clear content
-    content.innerHTML = "";
+  let query = db
+    .collection("movies")
+    .where("category", "==", PAGE_TYPE)
+    .orderBy("timestamp", "desc")
+    .limit(PAGE_SIZE);
 
-    if (!filtered.length) {
-      content.innerHTML = `<p style="padding:30px; font-size:18px; color:#bbb;">No ${PAGE_TYPE.toLowerCase()} uploaded yet.</p>`;
-      return;
-    }
+  if (lastDoc) {
+    query = query.startAfter(lastDoc);
+  }
 
-    // Create 4x2 grid (8 per page)
-    const row = document.createElement("div");
-    row.className = "row";
-    row.innerHTML = `<h2>${PAGE_TYPE}</h2><div class="grid"></div>`;
-    const grid = row.querySelector(".grid");
+  const snapshot = await query.get();
 
-    filtered.forEach(movie => grid.innerHTML += renderCard(movie));
+  if (snapshot.empty && !lastDoc) {
+    content.innerHTML = `
+      <p style="padding:30px; font-size:18px; color:#bbb;">
+        No titles available yet.
+      </p>
+    `;
+    return;
+  }
 
-    content.appendChild(row);
+  if (snapshot.size < PAGE_SIZE) {
+    isEnd = true;
+  }
+
+  let grid = document.querySelector(".list");
+
+  if (!grid) {
+    content.innerHTML = `
+      <div class="row">
+        <h2>${PAGE_TYPE}</h2>
+        <div class="list"></div>
+        <div class="load-more-wrapper">
+          <button id="loadMoreBtn">Load More</button>
+        </div>
+      </div>
+    `;
+    grid = document.querySelector(".list");
+    document
+      .getElementById("loadMoreBtn")
+      .addEventListener("click", loadMovies);
+  }
+
+  snapshot.forEach(doc => {
+    const movie = doc.data();
+    movie.id = doc.id;
+    grid.insertAdjacentHTML("beforeend", renderCard(movie));
   });
 
-// Quick search
+  lastDoc = snapshot.docs[snapshot.docs.length - 1];
+
+  if (isEnd) {
+    const btn = document.getElementById("loadMoreBtn");
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "You’ve reached the end";
+    }
+  }
+}
+
+// ------------------------------
+// SEARCH (CLIENT SIDE)
+// ------------------------------
 searchInput.addEventListener("input", () => {
   const filter = searchInput.value.toLowerCase();
   document.querySelectorAll(".card").forEach(card => {
@@ -69,3 +124,8 @@ searchInput.addEventListener("input", () => {
     card.style.display = title.includes(filter) ? "block" : "none";
   });
 });
+
+// ------------------------------
+// INIT
+// ------------------------------
+loadMovies();
