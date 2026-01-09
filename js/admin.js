@@ -12,7 +12,6 @@ function isValidCategory(cat) {
   return ALLOWED_CATEGORIES.includes(cat);
 }
 
-
 // ==============================
 // NOTIFICATIONS
 // ==============================
@@ -49,196 +48,195 @@ function adminLogin() {
       loadAdminMovies();
       notify("Admin logged in ✅", "success");
     })
-    .catch(err => notify("Login failed: " + err.message, "error"));
+    .catch(err => notify(err.message, "error"));
 }
 
 // ==============================
-// UPLOAD VIDEO + THUMBNAIL
+// UPLOAD MOVIE (POSTER REQUIRED)
 // ==============================
 function uploadVideo() {
+  if (!currentUser) {
+    notify("Admin not logged in", "error");
+    return;
+  }
+
   const source = document.getElementById("source").value;
-  const teraboxUrl = document.getElementById("teraboxUrl").value.trim();
-  if (!currentUser) { notify("Admin not logged in", "error"); return; }
+  const title = document.getElementById("title").value.trim();
+  const category = document.getElementById("category").value.trim();
+  const description = document.getElementById("description").value.trim() || "Watch now";
+  const featured = document.getElementById("featured").checked;
 
   const videoFile = document.getElementById("videoFile").files[0];
   const thumbnailFile = document.getElementById("thumbnailFile").files[0];
-  const title = document.getElementById("title").value.trim();
-  const category = document.getElementById("category").value.trim();
-  const description = document.getElementById("description").value.trim() || "Watch the latest release now";
-  const featured = document.getElementById("featured").checked;
 
+  const teraboxUrl = document.getElementById("teraboxUrl").value.trim();
+  const teraboxDirectLink = document.getElementById("teraboxDirectLink").value.trim();
+
+  // ---------------- VALIDATION ----------------
   if (!title || !category) {
-  notify("Title and category are required", "error");
-  return;
+    notify("Title and category required", "error");
+    return;
   }
 
   if (!isValidCategory(category)) {
-    notify("Category must be Movies or Series ONLY", "error");
+    notify("Category must be Movies or Series", "error");
+    return;
+  }
+
+  // 🔴 POSTER IS MANDATORY
+  if (!thumbnailFile) {
+    notify("Poster image is REQUIRED", "error");
     return;
   }
 
   if ((source === "cloudinary" || source === "both") && !videoFile) {
-    notify("Video file required for Cloudinary upload", "error");
+    notify("Video file required", "error");
     return;
   }
 
-  if ((source === "terabox" || source === "both") && !teraboxUrl) {
-    notify("Terabox link required", "error");
+  if ((source === "terabox" || source === "both") && (!teraboxUrl || !teraboxDirectLink)) {
+    notify("Terabox links required", "error");
     return;
   }
 
-  if ((source === "terabox" || source === "both") && !document.getElementById("teraboxDirectLink").value.trim()) {
-    notify("Direct Terabox link required", "error");
-    return;
-  }
+  // ---------------- PROGRESS ----------------
+  const box = document.getElementById("progress-container");
+  const bar = document.getElementById("progress-bar");
+  const text = document.getElementById("progress-text");
 
+  box.classList.remove("hidden");
+  bar.style.width = "0%";
+  text.textContent = "Uploading poster...";
 
-  const progressBox = document.getElementById("progress-container");
-  const progressBar = document.getElementById("progress-bar");
-  const progressText = document.getElementById("progress-text");
+  // ==============================
+  // 1️⃣ UPLOAD POSTER FIRST (IMAGE PRESET)
+  // ==============================
+  const posterData = new FormData();
+  posterData.append("file", thumbnailFile);
+  posterData.append("upload_preset", "cornflakes_images");
 
-  progressBox.classList.remove("hidden");
-  progressBar.style.width = "0%";
-  progressText.textContent = "Uploading 0%";
+  const posterXhr = new XMLHttpRequest();
+  posterXhr.open("POST", `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`);
 
-  // -------- UPLOAD VIDEO --------
-  // -------- UPLOAD VIDEO --------
-
-// ⛔ TERABOX ONLY → SKIP CLOUDINARY COMPLETELY
-  if (source === "terabox") {
-    saveMovieToFirestore(
-      title,
-      category,
-      description,
-      featured,
-      null, // no cloudinary video
-      null  // no thumbnail
-    );
-    return;
-  }
-
-  // ✅ CLOUDINARY OR BOTH → PROCEED WITH UPLOAD
-  const videoData = new FormData();
-  videoData.append("file", videoFile);
-  videoData.append("upload_preset", UPLOAD_PRESET);
-
-  const xhr = new XMLHttpRequest();
-  xhr.open("POST", `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`);
-
-
-  xhr.upload.onprogress = e => {
-    if (e.lengthComputable) {
-      const percent = Math.round((e.loaded / e.total) * 100);
-      progressBar.style.width = percent + "%";
-      progressText.textContent = `Uploading video ${percent}%`;
+  posterXhr.onload = () => {
+    if (posterXhr.status !== 200) {
+      notify("Poster upload failed", "error");
+      box.classList.add("hidden");
+      return;
     }
+
+    const posterRes = JSON.parse(posterXhr.responseText);
+    if (!posterRes.secure_url) {
+      notify("Invalid poster response", "error");
+      return;
+    }
+
+    const posterUrl = posterRes.secure_url;
+
+    // ==============================
+    // 2️⃣ TERABOX ONLY → SAVE NOW
+    // ==============================
+    if (source === "terabox") {
+      saveMovie(
+        title,
+        category,
+        description,
+        featured,
+        null,
+        posterUrl,
+        teraboxUrl,
+        teraboxDirectLink,
+        source
+      );
+      return;
+    }
+
+    // ==============================
+    // 3️⃣ UPLOAD VIDEO (VIDEO PRESET)
+    // ==============================
+    text.textContent = "Uploading video...";
+
+    const videoData = new FormData();
+    videoData.append("file", videoFile);
+    videoData.append("upload_preset", "cornflakes_upload");
+
+    const videoXhr = new XMLHttpRequest();
+    videoXhr.open("POST", `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`);
+
+    videoXhr.upload.onprogress = e => {
+      if (e.lengthComputable) {
+        const percent = Math.round((e.loaded / e.total) * 100);
+        bar.style.width = percent + "%";
+        text.textContent = `Uploading video ${percent}%`;
+      }
+    };
+
+    videoXhr.onload = () => {
+      if (videoXhr.status !== 200) {
+        notify("Video upload failed", "error");
+        return;
+      }
+
+      const videoRes = JSON.parse(videoXhr.responseText);
+      if (!videoRes.secure_url) {
+        notify("Invalid video response", "error");
+        return;
+      }
+
+      saveMovie(
+        title,
+        category,
+        description,
+        featured,
+        videoRes.secure_url,
+        posterUrl,
+        teraboxUrl,
+        teraboxDirectLink,
+        source
+      );
+    };
+
+    videoXhr.onerror = () => notify("Video upload error", "error");
+    videoXhr.send(videoData);
   };
 
-  xhr.onload = () => {
-    if (xhr.status !== 200) { notify("Video upload failed", "error"); return; }
-    const result = JSON.parse(xhr.responseText);
-    if (!result.secure_url) { notify("Invalid Cloudinary response", "error"); return; }
-
-    const videoUrl = result.secure_url;
-
-    // -------- UPLOAD THUMBNAIL IF PROVIDED --------
-    if (thumbnailFile) {
-      const thumbData = new FormData();
-      thumbData.append("file", thumbnailFile);
-      thumbData.append("upload_preset", UPLOAD_PRESET);
-
-      const thumbXhr = new XMLHttpRequest();
-      thumbXhr.open("POST", `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`);
-
-      thumbXhr.upload.onprogress = e => {
-        if (e.lengthComputable) {
-          const percent = Math.round((e.loaded / e.total) * 100);
-          progressBar.style.width = percent + "%";
-          progressText.textContent = `Uploading thumbnail ${percent}%`;
-        }
-      };
-
-      thumbXhr.onload = () => {
-        if (thumbXhr.status !== 200) {
-          notify("Thumbnail upload failed, using auto thumbnail", "info");
-
-          const fileName = videoUrl.split("/").pop();
-          const autoThumb = `https://res.cloudinary.com/${CLOUD_NAME}/video/upload/so_1,w_400/${fileName.replace(".mp4", ".jpg")}`;
-
-          saveMovieToFirestore(title, category, description, featured, videoUrl, autoThumb);
-          return;
-        }
-
-        const thumbResult = JSON.parse(thumbXhr.responseText);
-        saveMovieToFirestore(
-          title,
-          category,
-          description,
-          featured,
-          videoUrl,
-          thumbResult.secure_url || null
-        );
-      };
-
-      thumbXhr.onerror = () => notify("Thumbnail upload failed", "error");
-      thumbXhr.send(thumbData);
-
-    } else {
-      // No custom thumbnail, auto-generate
-      const fileName = videoUrl.split("/").pop();
-      const autoThumb = `https://res.cloudinary.com/${CLOUD_NAME}/video/upload/so_1,w_400/${fileName.replace(".mp4",".jpg")}`;
-      saveMovieToFirestore(title, category, description, featured, videoUrl, autoThumb);
-    }
-  };
-
-  xhr.onerror = () => notify("Video upload network error", "error");
-  xhr.send(videoData);
+  posterXhr.onerror = () => notify("Poster upload error", "error");
+  posterXhr.send(posterData);
 }
 
 // ==============================
-// SAVE MOVIE TO FIRESTORE
+// SAVE TO FIRESTORE
 // ==============================
-function saveMovieToFirestore(title, category, description, featured, videoUrl, thumbnailUrl) {
-  const source = document.getElementById("source").value;
-  const teraboxUrl = document.getElementById("teraboxUrl").value.trim();
-  const teraboxDirectLink = document.getElementById("teraboxDirectLink").value.trim(); // ✅ new field
-
+function saveMovie(
+  title,
+  category,
+  description,
+  featured,
+  cloudinaryUrl,
+  thumbnail,
+  teraboxUrl,
+  teraboxDirectLink,
+  source
+) {
   db.collection("movies").add({
     title,
     category,
     description,
-
-    source, // "cloudinary" | "terabox" | "both"
-
-    cloudinaryUrl: source !== "terabox" ? videoUrl : null,
-    thumbnail: source !== "terabox" ? (thumbnailUrl || null) : null,
-    teraboxUrl: source !== "cloudinary" ? teraboxUrl : null,
-    teraboxDirectLink: source !== "cloudinary" ? teraboxDirectLink : null, // ✅ save direct link
-
+    source,
+    cloudinaryUrl: cloudinaryUrl || null,
+    thumbnail,
+    teraboxUrl: teraboxUrl || null,
+    teraboxDirectLink: teraboxDirectLink || null,
     featured,
-    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
     views: 0,
-    downloads: 0
+    downloads: 0,
+    timestamp: firebase.firestore.FieldValue.serverTimestamp()
   }).then(() => {
-      const progressBar = document.getElementById("progress-bar");
-      const progressText = document.getElementById("progress-text");
-      const progressContainer = document.getElementById("progress-container");
-
-      progressBar.style.width = "0%";
-      progressText.textContent = "";
-      progressContainer.classList.add("hidden");
-
-      document.getElementById("videoFile").value = "";
-      document.getElementById("thumbnailFile").value = "";
-      document.getElementById("title").value = "";
-      document.getElementById("category").value = "";
-      document.getElementById("description").value = "";
-      document.getElementById("featured").checked = false;
-      document.getElementById("teraboxUrl").value = "";
-      document.getElementById("teraboxDirectLink").value = ""; // ✅ reset input
-
-      notify("Movie uploaded successfully", "success");
-    }).catch(err => notify("Firestore error: " + err.message, "error"));
+    document.getElementById("progress-container").classList.add("hidden");
+    document.querySelectorAll("#panel input, #panel textarea").forEach(i => i.value = "");
+    document.getElementById("featured").checked = false;
+    notify("Upload successful ✅", "success");
+  }).catch(err => notify(err.message, "error"));
 }
 
 // ==============================
@@ -251,101 +249,24 @@ function loadAdminMovies() {
   db.collection("movies").orderBy("timestamp", "desc")
     .onSnapshot(snapshot => {
       list.innerHTML = "";
-
       snapshot.forEach(doc => {
-        const movie = doc.data();
-        const id = doc.id;
-
-        const item = document.createElement("div");
-        item.className = "admin-movie";
-
-        item.innerHTML = `
-          <div class="movie-header">
-            <span class="movie-title">${movie.title}</span>
-            <div class="header-actions">
-              <label>
-                <input type="checkbox" ${movie.featured ? "checked" : ""}> Featured
-              </label>
-              <button class="toggle-details">▸</button>
-              <button class="delete-btn">Delete</button>
-            </div>
-          </div>
-
-          <div class="movie-details hidden">
-            <input type="text" class="edit-title" value="${movie.title}">
-            <input type="text" class="edit-category" value="${movie.category}">
-            <textarea class="edit-description">${movie.description || ''}</textarea>
-            <button class="save-btn">Save Changes</button>
-            <div class="analytics">
-              <span>Views: ${movie.views || 0}</span>
-              <span>Downloads: ${movie.downloads || 0}</span>
-            </div>
-          </div>
+        const m = doc.data();
+        const div = document.createElement("div");
+        div.className = "admin-movie";
+        div.innerHTML = `
+          <strong>${m.title}</strong>
+          <span style="opacity:.6">(${m.category})</span>
+          <button onclick="deleteMovie('${doc.id}')">Delete</button>
         `;
-
-        // Toggle details
-        const toggleBtn = item.querySelector(".toggle-details");
-        const details = item.querySelector(".movie-details");
-        toggleBtn.onclick = () => details.classList.toggle("hidden");
-
-        // Featured toggle
-        item.querySelector("input[type=checkbox]").onchange = e => toggleFeatured(id, e.target.checked);
-
-        // Save inline edits
-        item.querySelector(".save-btn").onclick = () => {
-          const updatedTitle = item.querySelector(".edit-title").value.trim();
-          const updatedCategory = item.querySelector(".edit-category").value.trim();
-          const updatedDescription = item.querySelector(".edit-description").value.trim();
-
-          if (!updatedTitle || !updatedCategory) {
-            notify("Title and category cannot be empty", "error");
-            return;
-          }
-
-          if (!isValidCategory(updatedCategory)) {
-            notify("Category must be Movies or Series ONLY", "error");
-            return;
-          }
-
-          
-          db.collection("movies").doc(id).update({
-            title: updatedTitle,
-            category: updatedCategory,
-            description: updatedDescription
-          }).then(() => notify("Movie updated ✅", "success"))
-            .catch(err => notify("Update failed: " + err.message, "error"));
-        };
-
-        // Delete movie
-        item.querySelector(".delete-btn").onclick = () => {
-          if (confirm("Delete this movie?")) {
-            db.collection("movies").doc(id).delete();
-            notify("Movie deleted", "info");
-          }
-        };
-
-        list.appendChild(item);
+        list.appendChild(div);
       });
     });
 }
 
-// ==============================
-// FEATURED TOGGLE (ONLY ONE HERO)
-// ==============================
-function toggleFeatured(movieId, value) {
-  if (!value) {
-    db.collection("movies").doc(movieId).update({ featured: false });
-    return;
-  }
-
-  db.collection("movies").where("featured", "==", true)
-    .get()
-    .then(snapshot => {
-      const batch = db.batch();
-      snapshot.forEach(doc => batch.update(doc.ref, { featured: false }));
-      batch.update(db.collection("movies").doc(movieId), { featured: true });
-      return batch.commit();
-    }).then(() => notify("Featured movie updated", "success"));
+function deleteMovie(id) {
+  if (!confirm("Delete movie?")) return;
+  db.collection("movies").doc(id).delete();
+  notify("Movie deleted", "info");
 }
 
 // ==============================
