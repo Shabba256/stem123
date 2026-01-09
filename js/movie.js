@@ -3,10 +3,7 @@
 // ==============================
 const params = new URLSearchParams(window.location.search);
 const movieId = params.get("id");
-
-if (!movieId) {
-  window.location.href = "index.html";
-}
+if (!movieId) window.location.href = "index.html";
 
 // ==============================
 // ELEMENTS
@@ -16,37 +13,30 @@ const descEl = document.getElementById("movie-desc");
 const playBtn = document.getElementById("play-btn");
 const downloadBtn = document.getElementById("download-btn");
 const overlay = document.querySelector(".overlay");
+const teraboxAlert = document.getElementById("teraboxAlert");
 
 // ==============================
 // LOAD MOVIE
 // ==============================
 db.collection("movies").doc(movieId).get()
 .then(doc => {
-  if (!doc.exists) {
-    window.location.href = "index.html";
-    return;
-  }
+  if (!doc.exists) return window.location.href = "index.html";
 
   const movie = doc.data();
-
   titleEl.textContent = movie.title;
   descEl.textContent = movie.description || "Watch now";
 
-  // Show alert only for TeraBox movies
-const teraboxAlert = document.getElementById("teraboxAlert");
+  if (movie.source === "terabox" || movie.source === "both") {
+    teraboxAlert.classList.remove("hidden");
+  }
 
-if (movie.source === "terabox" || movie.source === "both") {
-  teraboxAlert.classList.remove("hidden");
-}
+  if (!movie.thumbnail) return; // skip corrupted
 
+  overlay.style.backgroundImage = `url("${movie.thumbnail}")`;
 
-  // ==============================
-  // SOURCE URL
-  // ==============================
-  const movieUrl =
-    movie.source === "cloudinary" || movie.source === "both"
-      ? movie.cloudinaryUrl
-      : movie.teraboxUrl;
+  const movieUrl = movie.source === "cloudinary" || movie.source === "both"
+    ? movie.cloudinaryUrl
+    : movie.teraboxUrl;
 
   if (!movieUrl) {
     playBtn.style.display = "none";
@@ -54,23 +44,6 @@ if (movie.source === "terabox" || movie.source === "both") {
     return;
   }
 
-  // ==============================
-  // BACKGROUND (FALLBACK LOGIC)
-  // ==============================
-  if (movie.thumbnail) {
-    overlay.style.backgroundImage = `url("${movie.thumbnail}")`;
-  } else if (movie.cloudinaryUrl) {
-    const fileName = movie.cloudinaryUrl.split("/").pop();
-    overlay.style.backgroundImage =
-      `url("https://res.cloudinary.com/dagxhzebg/video/upload/so_1,w_1280/${fileName.replace(".mp4",".jpg")}")`;
-  } else {
-    overlay.style.backgroundImage =
-      `url("https://placehold.co/1280x720?text=No+Preview")`;
-  }
-
-  // ==============================
-  // PLAY
-  // ==============================
   playBtn.onclick = () => {
     window.open(movieUrl, "_blank");
     db.collection("movies").doc(movieId).update({
@@ -78,28 +51,13 @@ if (movie.source === "terabox" || movie.source === "both") {
     });
   };
 
-  // ==============================
-  // DOWNLOAD
-  // ==============================
   downloadBtn.onclick = () => {
-    // count download
     db.collection("movies").doc(movieId).update({
       downloads: firebase.firestore.FieldValue.increment(1)
     });
 
-    // TERABOX movies → open terabx.html with direct link
-    if (movie.teraboxDirectLink) {
-      window.open(
-        `terabx.html?url=${encodeURIComponent(movie.teraboxDirectLink)}`,
-        "_blank"
-      );
-    } else if (movie.teraboxUrl) {
-      // fallback to original teraboxUrl if direct link missing
-      window.open(
-        `terabx.html?url=${encodeURIComponent(movie.teraboxUrl)}`,
-        "_blank"
-      );
-    }
+    const url = movie.teraboxDirectLink || movie.teraboxUrl;
+    if (url) window.open(`terabx.html?url=${encodeURIComponent(url)}`, "_blank");
   };
 
 })

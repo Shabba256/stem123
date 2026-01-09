@@ -1,18 +1,11 @@
 const content = document.getElementById("content");
 const searchInput = document.getElementById("quick-search");
 
-// Detect page type
-const PAGE_TYPE = window.location.pathname.includes("series")
-  ? "Series"
-  : "Movies";
-
+const PAGE_TYPE = window.location.pathname.includes("series") ? "Series" : "Movies";
 const PAGE_SIZE = 16;
 let lastDoc = null;
 let isEnd = false;
 
-// ------------------------------
-// NOTIFICATION
-// ------------------------------
 function notify(msg, type = "info") {
   const n = document.createElement("div");
   n.className = `notification ${type}`;
@@ -21,66 +14,40 @@ function notify(msg, type = "info") {
   setTimeout(() => n.remove(), 3000);
 }
 
-// ------------------------------
-// RENDER CARD
-// ------------------------------
 function renderCard(movie) {
-  let thumb = "https://placehold.co/400x600?text=No+Thumbnail";
-
-  if (movie.thumbnail) {
-    thumb = movie.thumbnail;
-  } else if (movie.cloudinaryUrl) {
-    const file = movie.cloudinaryUrl.split("/").pop();
-    thumb = `https://res.cloudinary.com/dagxhzebg/video/upload/f_jpg,c_fill,w_400/${file.replace(".mp4", ".jpg")}`;
-  }
+  if (!movie.thumbnail) return ""; // skip if no poster
 
   return `
     <div class="card" data-title="${movie.title}" onclick="openMovie('${movie.id}')">
-      <img src="${thumb}" alt="${movie.title}" loading="lazy" />
+      <img src="${movie.thumbnail}" alt="${movie.title}" loading="lazy" />
     </div>
   `;
 }
 
-// ------------------------------
-// OPEN MOVIE
-// ------------------------------
 function openMovie(id) {
   window.location.href = `movie.html?id=${id}`;
 }
 
-// ------------------------------
-// LOAD MOVIES (PAGINATED)
-// ------------------------------
 async function loadMovies() {
   if (isEnd) return;
 
-  let query = db
-    .collection("movies")
+  let query = db.collection("movies")
     .where("category", "==", PAGE_TYPE)
     .orderBy("timestamp", "desc")
     .limit(PAGE_SIZE);
 
-  if (lastDoc) {
-    query = query.startAfter(lastDoc);
-  }
+  if (lastDoc) query = query.startAfter(lastDoc);
 
   const snapshot = await query.get();
 
   if (snapshot.empty && !lastDoc) {
-    content.innerHTML = `
-      <p style="padding:30px; font-size:18px; color:#bbb;">
-        No titles available yet.
-      </p>
-    `;
+    content.innerHTML = `<p style="padding:30px; font-size:18px; color:#bbb;">No titles available yet.</p>`;
     return;
   }
 
-  if (snapshot.size < PAGE_SIZE) {
-    isEnd = true;
-  }
+  if (snapshot.size < PAGE_SIZE) isEnd = true;
 
   let grid = document.querySelector(".list");
-
   if (!grid) {
     content.innerHTML = `
       <div class="row">
@@ -92,15 +59,14 @@ async function loadMovies() {
       </div>
     `;
     grid = document.querySelector(".list");
-    document
-      .getElementById("loadMoreBtn")
-      .addEventListener("click", loadMovies);
+    document.getElementById("loadMoreBtn").addEventListener("click", loadMovies);
   }
 
   snapshot.forEach(doc => {
     const movie = doc.data();
     movie.id = doc.id;
-    grid.insertAdjacentHTML("beforeend", renderCard(movie));
+    const html = renderCard(movie);
+    if (html) grid.insertAdjacentHTML("beforeend", html);
   });
 
   lastDoc = snapshot.docs[snapshot.docs.length - 1];

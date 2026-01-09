@@ -9,7 +9,6 @@ const content = document.getElementById("content");
 const searchInput = document.getElementById("quick-search");
 const ALLOWED_CATEGORIES = ["Movies", "Series"];
 
-
 // ==============================
 // NOTIFICATIONS
 // ==============================
@@ -28,7 +27,6 @@ let heroMovies = [];
 let currentHeroIndex = 0;
 let heroInterval = null;
 
-// Load featured movies
 db.collection("movies")
   .where("featured", "==", true)
   .orderBy("timestamp", "desc")
@@ -51,17 +49,18 @@ function nextHero() {
 }
 
 function renderHero(movie) {
-  const movieUrl = movie.source === "cloudinary" || movie.source === "both"
-    ? movie.cloudinaryUrl
-    : movie.teraboxUrl;
+  const movieUrl =
+    movie.source === "cloudinary" || movie.source === "both"
+      ? movie.cloudinaryUrl
+      : movie.teraboxUrl;
 
-  if (!movieUrl) return; // skip if no URL
+  if (!movieUrl) return;
 
-  const thumbUrl = movie.thumbnail
-    ? movie.thumbnail
-    : movie.cloudinaryUrl
-    ? `https://res.cloudinary.com/dagxhzebg/video/upload/f_jpg,c_fill,w_1280/${movie.cloudinaryUrl.split("/").pop().replace(".mp4", ".jpg")}`
-    : "https://placehold.co/1280x720?text=No+Thumbnail";
+  const thumbUrl =
+    movie.thumbnail ||
+    (movie.cloudinaryUrl
+      ? `https://res.cloudinary.com/dagxhzebg/video/upload/f_jpg,c_fill,w_1280/${movie.cloudinaryUrl.split("/").pop().replace(".mp4", ".jpg")}`
+      : "https://placehold.co/1280x720?text=No+Poster");
 
   hero.classList.remove("hero-animate");
 
@@ -96,8 +95,6 @@ db.collection("movies")
 
     snapshot.forEach(doc => {
       const movie = doc.data();
-
-      // 🔒 Only allow Movies & Series
       if (!ALLOWED_CATEGORIES.includes(movie.category)) return;
 
       if (!grouped[movie.category]) grouped[movie.category] = [];
@@ -110,28 +107,28 @@ db.collection("movies")
       row.innerHTML = `
         <div class="row-header">
           <h2>${category}</h2>
-          <a href="${category === 'Movies' ? 'movieside.html' : 'serieside.html'}" class="see-more">See More</a>
+          <a href="${category === "Movies" ? "movieside.html" : "serieside.html"}" class="see-more">See More</a>
         </div>
         <div class="list"></div>
       `;
 
-
       grouped[category].slice(0, 8).forEach(movie => {
-        const movieUrl = movie.source === "cloudinary" || movie.source === "both"
-          ? movie.cloudinaryUrl
-          : movie.teraboxUrl;
+        const movieUrl =
+          movie.source === "cloudinary" || movie.source === "both"
+            ? movie.cloudinaryUrl
+            : movie.teraboxUrl;
 
-        if (!movieUrl) return; // skip movies with no URL
+        if (!movieUrl) return;
 
-        const thumbUrl = movie.thumbnail
-          ? movie.thumbnail
-          : movie.cloudinaryUrl
-          ? `https://res.cloudinary.com/dagxhzebg/video/upload/f_jpg,c_fill,w_400/${movie.cloudinaryUrl.split("/").pop().replace(".mp4", ".jpg")}`
-          : "https://placehold.co/400x225?text=No+Thumbnail";
+        const thumb =
+          movie.thumbnail ||
+          (movie.cloudinaryUrl
+            ? `https://res.cloudinary.com/dagxhzebg/video/upload/f_jpg,c_fill,w_400/${movie.cloudinaryUrl.split("/").pop().replace(".mp4", ".jpg")}`
+            : "https://placehold.co/400x225?text=No+Poster");
 
         row.querySelector(".list").innerHTML += `
           <div class="card" data-title="${movie.title}" onclick="openMovie('${movie.id}')">
-            <img src="${thumbUrl}" alt="${movie.title}" loading="lazy"/>
+            <img src="${thumb}" alt="${movie.title}" loading="lazy"/>
           </div>
         `;
       });
@@ -152,9 +149,10 @@ function openMovie(movieId) {
 // INCREMENT VIEWS
 // ==============================
 function incrementViews(movieId) {
-  db.collection("movies").doc(movieId).update({
-    views: firebase.firestore.FieldValue.increment(1)
-  }).catch(() => notify("Failed to increment views", "error"));
+  db.collection("movies")
+    .doc(movieId)
+    .update({ views: firebase.firestore.FieldValue.increment(1) })
+    .catch(() => notify("Failed to increment views", "error"));
 }
 
 // ==============================
