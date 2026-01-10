@@ -24,34 +24,6 @@ function notify(message, type = "info") {
 }
 
 // ==============================
-// ADMIN LOGIN
-// ==============================
-function adminLogin() {
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value.trim();
-
-  if (!email || !password) {
-    notify("Enter email and password", "error");
-    return;
-  }
-
-  auth.signInWithEmailAndPassword(email, password)
-    .then(({ user }) => {
-      if (user.uid !== ADMIN_UID) {
-        notify("Not authorized as admin", "error");
-        auth.signOut();
-        return;
-      }
-      currentUser = user;
-      document.getElementById("panel").classList.remove("hidden");
-      document.getElementById("login").style.display = "none";
-      loadAdminDashboard();
-      notify("Admin logged in ✅", "success");
-    })
-    .catch(err => notify(err.message, "error"));
-}
-
-// ==============================
 // UPLOAD MOVIE (POSTER REQUIRED)
 // ==============================
 function uploadVideo() {
@@ -285,11 +257,20 @@ function loadAdminDashboard() {
 
 
 // ==============================
-// AUTH STATE
+// AUTH GUARD & LOAD DASHBOARD
 // ==============================
 auth.onAuthStateChanged(user => {
-  if (user && user.uid === ADMIN_UID) {
-    currentUser = user;
+  if (!user || user.uid !== ADMIN_UID) {
+    // Not logged in as admin → redirect to login page
+    notify("Not authorized! Redirecting to login...", "error");
+    setTimeout(() => window.location.href = "admin-login.html", 1500);
+    return;
   }
+
+  // Admin authenticated → show panel & load dashboard
+  currentUser = user;
+  document.getElementById("panel").classList.remove("hidden");
+  loadAdminDashboard();
 });
+
 

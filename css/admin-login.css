@@ -1,0 +1,112 @@
+/* ============================= */
+/* GLOBAL STYLES                 */
+/* ============================= */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #000;
+  color: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+/* ============================= */
+/* LOGIN BOX                     */
+/* ============================= */
+#loginBox {
+  background: #111;
+  padding: 30px;
+  border-radius: 8px;
+  border: 1px solid #333;
+  max-width: 360px;
+  width: 100%;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+  text-align: center;
+}
+
+/* ============================= */
+/* INPUTS                        */
+/* ============================= */
+#loginBox input {
+  display: block;
+  width: 100%;
+  margin: 12px 0;
+  padding: 12px;
+  border-radius: 4px;
+  border: 1px solid #333;
+  background: #111;
+  color: #fff;
+  font-size: 14px;
+}
+
+/* ============================= */
+/* BUTTON                        */
+/* ============================= */
+#loginBox button {
+  width: 100%;
+  padding: 12px;
+  background: #e50914;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background 0.25s ease;
+}
+
+#loginBox button:hover {
+  background: #b20710;
+}
+
+/* ============================= */
+/* NOTIFICATIONS                 */
+/* ============================= */
+.notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 14px 22px;
+  border-radius: 8px;
+  color: #fff;
+  font-weight: bold;
+  font-family: 'Arial', sans-serif;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+  opacity: 0.95;
+  z-index: 1000;
+  animation: slideIn 0.4s ease forwards;
+  backdrop-filter: blur(6px);
+  pointer-events: none;
+}
+
+.notification.info {
+  background: rgba(229, 9, 20, 0.85); /* Netflix red */
+}
+
+.notification.success {
+  background: rgba(46, 204, 113, 0.9); /* subtle green for success */
+}
+
+.notification.error {
+  background: rgba(231, 76, 60, 0.9); /* darker red for errors */
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 0.95; }
+}
+
+/* ============================= */
+/* RESPONSIVE / MOBILE           */
+/* ============================= */
+@media (max-width: 480px) {
+  #loginBox {
+    padding: 20px;
+  }
+
+  #loginBox input, #loginBox button {
+    font-size: 14px;
+    padding: 10px;
+  }
+}

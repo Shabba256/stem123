@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Admin | StreamFlix</title>
+  <title>Admin Dashboard | StreamFlix</title>
   <link rel="stylesheet" href="css/admin.css">
 
   <!-- Firebase SDKs -->
@@ -57,77 +57,75 @@
       margin-top: 6px;
       font-size: 14px;
     }
+
+    .admin-section {
+      margin-bottom: 30px;
+    }
   </style>
 </head>
 <body>
 
-  <h1>🎬 StreamFlix Admin Panel</h1>
-
-  <!-- LOGIN -->
-  <div id="login">
-    <input type="email" id="email" placeholder="Admin email">
-    <input type="password" id="password" placeholder="Password">
-    <button onclick="adminLogin()">Login</button>
-  </div>
+  <h1>🎬 StreamFlix Admin Dashboard</h1>
 
   <!-- ADMIN PANEL -->
   <div id="panel" class="hidden">
 
-    <h2>Upload Movie</h2>
-    <input type="file" id="videoFile" accept="video/*">
-    <input type="file" id="thumbnailFile" accept="image/*"> <!-- NEW -->
-    <input type="text" id="title" placeholder="Movie title">
-    <select id="category">
-      <option value="">Select category</option>
-      <option value="Movies">Movies</option>
-      <option value="Series">Series</option>
-    </select>
-    <textarea id="description" placeholder="Movie description"></textarea>
-    <select id="source">
-      <option value="cloudinary">Cloudinary (Streaming)</option>
-      <option value="terabox">Terabox (Download only)</option>
-      <option value="both">Cloudinary + Terabox</option>
-    </select>
-
+    <!-- UPLOAD SECTION -->
+    <section id="uploadSection">
+      <h2>Upload Movie/Series</h2>
+      <input type="file" id="videoFile" accept="video/*">
+      <input type="file" id="thumbnailFile" accept="image/*">
+      <input type="text" id="title" placeholder="Title">
+      <select id="category">
+        <option value="">Select category</option>
+        <option value="Movies">Movies</option>
+        <option value="Series">Series</option>
+      </select>
+      <textarea id="description" placeholder="Description"></textarea>
+      <select id="source">
+        <option value="cloudinary">Cloudinary (Streaming)</option>
+        <option value="terabox">Terabox (Download only)</option>
+        <option value="both">Cloudinary + Terabox</option>
+      </select>
       <input type="text" id="teraboxUrl" placeholder="Terabox download link">
-      <input type="text" id="teraboxDirectLink" placeholder="Direct Terabox link for terabx.html">
+      <input type="text" id="teraboxDirectLink" placeholder="Direct Terabox link">
+      <label class="featured-toggle">
+        <input type="checkbox" id="featured">
+        <span>Set as Featured (Hero Banner)</span>
+      </label>
+      <button onclick="uploadVideo()">Upload</button>
 
-
-    <label class="featured-toggle">
-      <input type="checkbox" id="featured">
-      <span>Set as Featured (Hero Banner)</span>
-    </label>
-
-    <button onclick="uploadVideo()">Upload</button>
-
-    <!-- Progress Bar -->
-    <div id="progress-container" class="hidden">
-      <div id="progress-bar"></div>
-      <p id="progress-text"></p>
-    </div>
+      <!-- Progress Bar -->
+      <div id="progress-container" class="hidden">
+        <div id="progress-bar"></div>
+        <p id="progress-text"></p>
+      </div>
+    </section>
 
     <hr>
 
-    <h2>Dashboard</h2>
+    <!-- DASHBOARD PREVIEW -->
+    <section id="dashboardPreview">
 
-    <!-- MOVIES PREVIEW -->
-    <div class="admin-section">
-      <h3>
-        Movies
-        <a href="admin-movies.html" style="float:right;font-size:14px;">See more →</a>
-      </h3>
-      <div id="moviesPreview"></div>
-    </div>
+      <!-- MOVIES PREVIEW -->
+      <div class="admin-section">
+        <h3>
+          Movies
+          <a href="admin-movies.html" style="float:right;font-size:14px;">See more →</a>
+        </h3>
+        <div id="moviesPreview"></div>
+      </div>
 
-    <!-- SERIES PREVIEW -->
-    <div class="admin-section" style="margin-top:30px;">
-      <h3>
-        Series
-        <a href="admin-series.html" style="float:right;font-size:14px;">See more →</a>
-      </h3>
-      <div id="seriesPreview"></div>
-    </div>
+      <!-- SERIES PREVIEW -->
+      <div class="admin-section">
+        <h3>
+          Series
+          <a href="admin-series.html" style="float:right;font-size:14px;">See more →</a>
+        </h3>
+        <div id="seriesPreview"></div>
+      </div>
 
+    </section>
 
   </div>
 

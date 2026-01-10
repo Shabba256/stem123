@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Admin Series | StreamFlix</title>
-  <link rel="stylesheet" href="css/admin-items.css">
+  <title>Admin Login | StreamFlix</title>
+  <link rel="stylesheet" href="css/admin-login.css">
 
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -12,19 +12,15 @@
 </head>
 <body>
 
-  <h1>📺 Admin Series</h1>
-  <p><a href="admin.html" style="font-size:14px;">← Back to Dashboard</a></p>
+  <div id="loginBox">
+    <h1>🎬 Admin Login</h1>
 
-
-  <!-- SEARCH -->
-  <div id="searchContainer">
-    <input type="text" id="searchInput" placeholder="Search series by title...">
+    <input type="email" id="email" placeholder="Admin Email">
+    <input type="password" id="password" placeholder="Password">
+    <button onclick="adminLogin()">Login</button>
   </div>
 
-  <!-- SERIES LIST -->
-  <div id="itemsList"></div>
-
   <script src="js/config.js"></script>
-  <script src="js/admin-series.js"></script>
+  <script src="js/admin-login.js"></script>
 </body>
 </html>
