@@ -224,53 +224,55 @@ function loadAdminDashboard() {
   seriesBox.innerHTML = "Loading...";
 
   db.collection("movies")
-    .orderBy("timestamp", "desc")
-    .get()
-    .then(snapshot => {
-      moviesBox.innerHTML = "";
-      seriesBox.innerHTML = "";
+  .orderBy("timestamp", "desc")
+  .onSnapshot(snapshot => {
+    moviesBox.innerHTML = "";
+    seriesBox.innerHTML = "";
 
-      let moviesCount = 0;
-      let seriesCount = 0;
+    let moviesCount = 0;
+    let seriesCount = 0;
 
-      snapshot.forEach(doc => {
-        const m = doc.data();
-        const div = document.createElement("div");
-        div.className = "admin-movie";
-        div.textContent = m.title;
+    snapshot.forEach(doc => {
+      const m = doc.data();
+      const div = document.createElement("div");
+      div.className = "admin-movie";
+      div.textContent = m.title;
 
-        if (m.category === "Movies" && moviesCount < 5) {
-          moviesBox.appendChild(div);
-          moviesCount++;
-        }
+      if (m.category === "Movies" && moviesCount < 5) {
+        moviesBox.appendChild(div);
+        moviesCount++;
+      }
 
-        if (m.category === "Series" && seriesCount < 5) {
-          seriesBox.appendChild(div);
-          seriesCount++;
-        }
-      });
-
-      if (moviesCount === 0) moviesBox.innerHTML = "No movies yet";
-      if (seriesCount === 0) seriesBox.innerHTML = "No series yet";
+      if (m.category === "Series" && seriesCount < 5) {
+        seriesBox.appendChild(div);
+        seriesCount++;
+      }
     });
+
+    if (moviesCount === 0) moviesBox.innerHTML = "No movies yet";
+    if (seriesCount === 0) seriesBox.innerHTML = "No series yet";
+  });
 }
 
 
 // ==============================
 // AUTH GUARD & LOAD DASHBOARD
 // ==============================
-auth.onAuthStateChanged(user => {
-  if (!user || user.uid !== ADMIN_UID) {
-    // Not logged in as admin → redirect to login page
-    notify("Not authorized! Redirecting to login...", "error");
-    setTimeout(() => window.location.href = "admin-login.html", 1500);
-    return;
-  }
+document.addEventListener("DOMContentLoaded", () => {
+  auth.onAuthStateChanged(user => {
+    if (!user || user.uid !== ADMIN_UID) {
+      notify("Not authorized! Redirecting to login...", "error");
+      setTimeout(() => window.location.href = "admin-login.html", 1500);
+      return;
+    }
 
-  // Admin authenticated → show panel & load dashboard
-  currentUser = user;
-  document.getElementById("panel").classList.remove("hidden");
-  loadAdminDashboard();
+    // Admin authenticated → show panel & load dashboard
+    currentUser = user;
+    document.getElementById("panel").classList.remove("hidden");
+
+    // ✅ Load dashboard after DOM + auth ready
+    loadAdminDashboard();
+  });
 });
 
 
