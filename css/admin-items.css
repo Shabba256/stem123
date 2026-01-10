@@ -1,0 +1,170 @@
+/* ============================= */
+/* GLOBAL STYLES                  */
+/* ============================= */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #000;
+  color: #fff;
+  padding: 20px;
+}
+
+h1 {
+  color: #e50914;
+  margin-bottom: 20px;
+  font-size: 28px;
+  text-align: center;
+}
+
+.hidden { display: none; }
+
+/* ============================= */
+/* SEARCH BAR                     */
+/* ============================= */
+#searchContainer {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+#searchInput {
+  width: 100%;
+  max-width: 400px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  border: 1px solid #333;
+  background: #111;
+  color: #fff;
+  font-size: 16px;
+}
+
+/* ============================= */
+/* ITEMS LIST                     */
+/* ============================= */
+#itemsList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+/* ============================= */
+/* ITEM CARD                      */
+/* ============================= */
+.admin-movie {
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.admin-movie:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.7);
+}
+
+.admin-movie img {
+  width: 100%;
+  border-radius: 6px;
+  margin-bottom: 10px;
+}
+
+.admin-movie h3 {
+  font-size: 16px;
+  margin: 6px 0;
+  text-align: center;
+}
+
+.admin-movie span {
+  font-size: 13px;
+  opacity: 0.7;
+  margin-bottom: 6px;
+}
+
+.admin-movie .analytics {
+  display: flex;
+  gap: 12px;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.admin-movie button {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  background: #e50914;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s ease;
+}
+
+.admin-movie button:hover {
+  background: #b20710;
+}
+
+/* ============================= */
+/* NOTIFICATIONS                  */
+/* ============================= */
+.notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 14px 22px;
+  border-radius: 8px;
+  color: #fff;
+  font-weight: bold;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+  opacity: 0.95;
+  z-index: 1000;
+  animation: slideIn 0.4s ease forwards;
+  backdrop-filter: blur(6px);
+  font-family: 'Arial', sans-serif;
+  pointer-events: none;
+}
+
+.notification.info {
+  background: rgba(229, 9, 20, 0.85); /* Netflix red */
+}
+
+.notification.success {
+  background: rgba(46, 204, 113, 0.9); /* Green */
+}
+
+.notification.error {
+  background: rgba(231, 76, 60, 0.9); /* Dark red */
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 0.95; }
+}
+
+/* ============================= */
+/* RESPONSIVE DESIGN              */
+/* ============================= */
+@media (max-width: 768px) {
+  #itemsList {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+  }
+
+  #searchInput {
+    max-width: 100%;
+  }
+
+  .admin-movie h3 {
+    font-size: 14px;
+  }
+
+  .admin-movie .analytics {
+    font-size: 12px;
+  }
+
+  .admin-movie button {
+    font-size: 12px;
+  }
+}

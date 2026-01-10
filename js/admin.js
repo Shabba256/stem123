@@ -45,7 +45,7 @@ function adminLogin() {
       currentUser = user;
       document.getElementById("panel").classList.remove("hidden");
       document.getElementById("login").style.display = "none";
-      loadAdminMovies();
+      loadAdminDashboard();
       notify("Admin logged in ✅", "success");
     })
     .catch(err => notify(err.message, "error"));
@@ -240,34 +240,49 @@ function saveMovie(
 }
 
 // ==============================
-// LOAD ADMIN MOVIES
+// LOAD ADMIN DASHBOARD (PREVIEW)
 // ==============================
-function loadAdminMovies() {
-  const list = document.getElementById("movieList");
-  list.innerHTML = "Loading...";
+function loadAdminDashboard() {
+  const moviesBox = document.getElementById("moviesPreview");
+  const seriesBox = document.getElementById("seriesPreview");
 
-  db.collection("movies").orderBy("timestamp", "desc")
-    .onSnapshot(snapshot => {
-      list.innerHTML = "";
+  if (!moviesBox || !seriesBox) return;
+
+  moviesBox.innerHTML = "Loading...";
+  seriesBox.innerHTML = "Loading...";
+
+  db.collection("movies")
+    .orderBy("timestamp", "desc")
+    .get()
+    .then(snapshot => {
+      moviesBox.innerHTML = "";
+      seriesBox.innerHTML = "";
+
+      let moviesCount = 0;
+      let seriesCount = 0;
+
       snapshot.forEach(doc => {
         const m = doc.data();
         const div = document.createElement("div");
         div.className = "admin-movie";
-        div.innerHTML = `
-          <strong>${m.title}</strong>
-          <span style="opacity:.6">(${m.category})</span>
-          <button onclick="deleteMovie('${doc.id}')">Delete</button>
-        `;
-        list.appendChild(div);
+        div.textContent = m.title;
+
+        if (m.category === "Movies" && moviesCount < 5) {
+          moviesBox.appendChild(div);
+          moviesCount++;
+        }
+
+        if (m.category === "Series" && seriesCount < 5) {
+          seriesBox.appendChild(div);
+          seriesCount++;
+        }
       });
+
+      if (moviesCount === 0) moviesBox.innerHTML = "No movies yet";
+      if (seriesCount === 0) seriesBox.innerHTML = "No series yet";
     });
 }
 
-function deleteMovie(id) {
-  if (!confirm("Delete movie?")) return;
-  db.collection("movies").doc(id).delete();
-  notify("Movie deleted", "info");
-}
 
 // ==============================
 // AUTH STATE
@@ -275,6 +290,6 @@ function deleteMovie(id) {
 auth.onAuthStateChanged(user => {
   if (user && user.uid === ADMIN_UID) {
     currentUser = user;
-    loadAdminMovies();
   }
 });
+
