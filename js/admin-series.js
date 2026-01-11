@@ -1,4 +1,31 @@
 // ==============================
+// ADMIN AUTH ENTRY POINT (LOGIN FIRST)
+// ==============================
+document.addEventListener("DOMContentLoaded", () => {
+  const panel = document.getElementById("panel");
+
+  // Hide UI immediately
+  if (panel) panel.style.display = "none";
+
+  auth.onAuthStateChanged(user => {
+    // ❌ Not logged in or not admin
+    if (!user || user.uid !== ADMIN_UID) {
+      window.location.replace("admin-login.html");
+      return;
+    }
+
+    // ✅ Admin verified
+    currentUser = user;
+
+    if (panel) panel.style.display = "block";
+
+    // Load dashboard ONLY after auth
+    loadAdminDashboard();
+  });
+});
+
+
+// ==============================
 // GLOBAL STATE
 // ==============================
 let currentUser = null;

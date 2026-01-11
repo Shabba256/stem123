@@ -1,4 +1,31 @@
 // ==============================
+// ADMIN AUTH ENTRY POINT (LOGIN FIRST)
+// ==============================
+document.addEventListener("DOMContentLoaded", () => {
+  const panel = document.getElementById("panel");
+
+  // Hide UI immediately
+  if (panel) panel.style.display = "none";
+
+  auth.onAuthStateChanged(user => {
+    // ❌ Not logged in or not admin
+    if (!user || user.uid !== ADMIN_UID) {
+      window.location.replace("admin-login.html");
+      return;
+    }
+
+    // ✅ Admin verified
+    currentUser = user;
+
+    if (panel) panel.style.display = "block";
+
+    // Load dashboard ONLY after auth
+    loadAdminDashboard();
+  });
+});
+
+
+// ==============================
 // GLOBAL STATE
 // ==============================
 let currentUser = null;
@@ -254,25 +281,5 @@ function loadAdminDashboard() {
   });
 }
 
-
-// ==============================
-// AUTH GUARD & LOAD DASHBOARD
-// ==============================
-document.addEventListener("DOMContentLoaded", () => {
-  auth.onAuthStateChanged(user => {
-    if (!user || user.uid !== ADMIN_UID) {
-      notify("Not authorized! Redirecting to login...", "error");
-      setTimeout(() => window.location.href = "admin-login.html", 1500);
-      return;
-    }
-
-    // Admin authenticated → show panel & load dashboard
-    currentUser = user;
-    document.getElementById("panel").classList.remove("hidden");
-
-    // ✅ Load dashboard after DOM + auth ready
-    loadAdminDashboard();
-  });
-});
 
 
