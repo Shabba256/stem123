@@ -1,34 +1,39 @@
 // ==============================
-// ADMIN AUTH ENTRY POINT (LOGIN FIRST)
+// ADMIN SESSION GUARD (FIRESTORE)
 // ==============================
+let currentUser = null;
+
 document.addEventListener("DOMContentLoaded", () => {
   const panel = document.getElementById("panel");
-
-  // Hide UI immediately
   if (panel) panel.style.display = "none";
 
-  auth.onAuthStateChanged(user => {
-    // ❌ Not logged in or not admin
-    if (!user || user.uid !== ADMIN_UID) {
-      window.location.replace("admin-login.html");
+  auth.onAuthStateChanged(async user => {
+    if (!user) {
+      window.location.href = "admin-login.html";
       return;
     }
 
-    // ✅ Admin verified
-    currentUser = user;
+    const adminDoc = await db.collection("admins").doc(user.uid).get();
 
+    if (!adminDoc.exists || adminDoc.data().enabled !== true) {
+      await auth.signOut();
+      window.location.href = "admin-login.html";
+      return;
+    }
+
+    // ✅ ADMIN SESSION CONFIRMED
+    currentUser = user;
     if (panel) panel.style.display = "block";
 
-    // Load dashboard ONLY after auth
     loadAdminDashboard();
   });
 });
 
 
+
 // ==============================
 // GLOBAL STATE
 // ==============================
-let currentUser = null;
 let allSeries = [];
 
 // ==============================
@@ -47,7 +52,7 @@ function notify(message, type = "info") {
 // ==============================
 auth.onAuthStateChanged(user => {
   if (!user || user.uid !== ADMIN_UID) {
-    window.location.href = "admin.html";
+    window.location.href = "/admin/admin.html";
     return;
   }
 

@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Admin Series | StreamFlix</title>
-  <link rel="stylesheet" href="css/admin-items.css">
+  <title>Admin Movies | StreamFlix</title>
+  <link rel="stylesheet" href="/css/admin-items.css">
 
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -12,19 +12,21 @@
 </head>
 <body>
 
-  <h1>📺 Admin Series</h1>
+  <h1>🎬 Admin Movies</h1>
+
+  <!-- Back to Dashboard -->
   <p><a href="admin.html" style="font-size:14px;">← Back to Dashboard</a></p>
 
 
   <!-- SEARCH -->
   <div id="searchContainer">
-    <input type="text" id="searchInput" placeholder="Search series by title...">
+    <input type="text" id="searchInput" placeholder="Search movies by title...">
   </div>
 
-  <!-- SERIES LIST -->
+  <!-- MOVIE LIST -->
   <div id="itemsList"></div>
 
-  <script src="js/config.js"></script>
-  <script src="js/admin-series.js"></script>
+  <script src="/admin/js/config.js"></script>
+  <script src="/admin/js/admin-movies.js"></script>
 </body>
 </html>

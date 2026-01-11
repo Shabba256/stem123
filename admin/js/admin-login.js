@@ -1,9 +1,4 @@
 // ==============================
-// GLOBAL STATE
-// ==============================
-let currentUser = null;
-
-// ==============================
 // NOTIFICATIONS (REUSE STYLE)
 // ==============================
 function notify(message, type = "info") {
@@ -15,7 +10,7 @@ function notify(message, type = "info") {
 }
 
 // ==============================
-// ADMIN LOGIN
+// ADMIN LOGIN (FIRESTORE-VERIFIED)
 // ==============================
 function adminLogin() {
   const email = document.getElementById("email").value.trim();
@@ -27,17 +22,18 @@ function adminLogin() {
   }
 
   auth.signInWithEmailAndPassword(email, password)
-    .then(({ user }) => {
-      if (user.uid !== ADMIN_UID) {
-        notify("Not authorized as admin", "error");
-        auth.signOut();
+    .then(async ({ user }) => {
+      // 🔐 Verify admin from Firestore
+      const adminDoc = await db.collection("admins").doc(user.uid).get();
+
+      if (!adminDoc.exists || adminDoc.data().enabled !== true) {
+        notify("Access denied: not an admin", "error");
+        await auth.signOut();
         return;
       }
 
-      currentUser = user;
-      notify("Login successful ✅ Redirecting...", "success");
+      notify("Admin verified ✅ Redirecting...", "success");
 
-      // Redirect to dashboard
       setTimeout(() => {
         window.location.href = "admin.html";
       }, 800);
@@ -45,12 +41,3 @@ function adminLogin() {
     .catch(err => notify(err.message, "error"));
 }
 
-// ==============================
-// AUTO REDIRECT IF ALREADY LOGGED IN
-// ==============================
-auth.onAuthStateChanged(user => {
-  if (user && user.uid === ADMIN_UID) {
-    currentUser = user;
-    window.location.href = "admin.html"; // already logged in
-  }
-});
