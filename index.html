@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Stream Flix</title>
+  <!-- Global styles -->
+  <link rel="stylesheet" href="css/client-main.css">
+  <!-- Page-specific styles -->
   <link rel="stylesheet" href="css/client.css">
 
   <!-- Firebase SDKs -->
@@ -12,7 +15,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 </head>
 <body>
-  <!-- NAVBAR -->
+  <!-- NAVBAR (global) -->
   <nav class="navbar">
     <div class="navbar-left">
       <div class="logo">Stream Flix</div>
@@ -26,30 +29,39 @@
           </div>
         </div>
       </div>
-
     </div>
     <div class="navbar-right">
       <input type="text" id="quick-search" placeholder="Search movies...">
     </div>
   </nav>
 
-  <!-- HERO BANNER -->
+  <!-- HERO SECTION (page-specific) -->
   <section id="hero">
     <div class="hero-overlay">
       <h1 id="hero-title">Featured Movie</h1>
       <p id="hero-desc">Watch the latest featured movie</p>
-      <button id="play-btn">▶ Play</button>
+      <button id="play-btn" class="btn btn-primary">▶ Play</button>
     </div>
   </section>
-  
+
   <!-- MOVIE ROWS -->
   <div id="content"></div>
 
-  <!-- NOTIFICATIONS AND PROGRESS BAR PLACEHOLDERS -->
+  <!-- PROGRESS BAR -->
   <div id="progress-container" class="hidden">
     <div id="progress-bar"></div>
     <p id="progress-text"></p>
   </div>
+
+  <!-- FOOTER (global) -->
+  <footer>
+    <p>&copy; 2026 Stream Flix. All rights reserved.</p>
+    <div>
+      <a href="#">Privacy</a> | 
+      <a href="#">Terms</a> | 
+      <a href="#">Contact</a>
+    </div>
+  </footer>
 
   <!-- CLIENT JS -->
   <script src="admin/js/config.js"></script>

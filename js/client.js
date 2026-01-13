@@ -87,12 +87,16 @@ function renderHero(movie) {
 // ==============================
 // MOVIE LISTINGS
 // ==============================
+// ==============================
+// MOVIE LISTINGS (8 items max per category)
+// ==============================
 db.collection("movies")
   .orderBy("timestamp", "desc")
   .get()
   .then(snapshot => {
     const grouped = {};
 
+    // Group movies by category
     snapshot.forEach(doc => {
       const movie = doc.data();
       if (!ALLOWED_CATEGORIES.includes(movie.category)) return;
@@ -101,9 +105,12 @@ db.collection("movies")
       grouped[movie.category].push({ ...movie, id: doc.id });
     });
 
+    // Render each category row
     for (const category in grouped) {
       const row = document.createElement("div");
       row.className = "row";
+
+      // Row header with See More
       row.innerHTML = `
         <div class="row-header">
           <h2>${category}</h2>
@@ -112,6 +119,9 @@ db.collection("movies")
         <div class="list"></div>
       `;
 
+      const listEl = row.querySelector(".list");
+
+      // Only take first 8 movies per category
       grouped[category].slice(0, 8).forEach(movie => {
         const movieUrl =
           movie.source === "cloudinary" || movie.source === "both"
@@ -123,16 +133,37 @@ db.collection("movies")
         const thumb =
           movie.thumbnail ||
           (movie.cloudinaryUrl
-            ? `https://res.cloudinary.com/dagxhzebg/video/upload/f_jpg,c_fill,w_400/${movie.cloudinaryUrl.split("/").pop().replace(".mp4", ".jpg")}`
+            ? `https://res.cloudinary.com/dagxhzebg/video/upload/f_jpg,c_fill,w_400/${movie.cloudinaryUrl
+                .split("/")
+                .pop()
+                .replace(".mp4", ".jpg")}`
             : "https://placehold.co/400x225?text=No+Poster");
 
-        row.querySelector(".list").innerHTML += `
-          <div class="card" data-title="${movie.title}" onclick="openMovie('${movie.id}')">
-            <img src="${thumb}" alt="${movie.title}" loading="lazy"/>
-          </div>
-        `;
+        // Create card
+        const card = document.createElement("div");
+        card.className = "card";
+        card.setAttribute("data-title", movie.title);
+
+        // Add click event
+        card.addEventListener("click", () => openMovie(movie.id));
+
+        // Poster wrapper
+        const posterWrap = document.createElement("div");
+        posterWrap.className = "poster-wrap";
+
+        const img = document.createElement("img");
+        img.src = thumb;
+        img.alt = movie.title;
+        img.loading = "lazy";
+
+        posterWrap.appendChild(img);
+        card.appendChild(posterWrap);
+
+        // Append to list
+        listEl.appendChild(card);
       });
 
+      // Append category row to content
       content.appendChild(row);
     }
   })
