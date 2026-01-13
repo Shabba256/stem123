@@ -3,7 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>All Series | StreamFlix</title>
+  <title>All Series | Stream Flix</title>
+
+  <!-- Global styles -->
+  <link rel="stylesheet" href="css/client-main.css">
+  <!-- Page-specific styles -->
   <link rel="stylesheet" href="css/sidepage.css">
 
   <!-- Firebase SDKs -->
@@ -12,13 +16,14 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 </head>
 <body>
+  <!-- NAVBAR (global) -->
   <nav class="navbar">
     <div class="navbar-left">
       <div class="logo">Stream Flix</div>
       <div class="nav-links">
         <a href="index.html">Home</a>
         <a href="movieside.html">Movies</a>
-        <a href="serieside.html">Series</a>
+        <a href="serieside.html" class="active">Series</a>
       </div>
     </div>
     <div class="navbar-right">
@@ -26,8 +31,31 @@
     </div>
   </nav>
 
+  <!-- PAGE HEADER -->
+  <header class="page-header">
+    <h1>All Series</h1>
+  </header>
+
+  <!-- SERIES GRID CONTENT -->
   <div id="content"></div>
 
+  <!-- PROGRESS BAR -->
+  <div id="progress-container" class="hidden">
+    <div id="progress-bar"></div>
+    <p id="progress-text"></p>
+  </div>
+
+  <!-- FOOTER (global) -->
+  <footer>
+    <p>&copy; 2026 Stream Flix. All rights reserved.</p>
+    <div>
+      <a href="#">Privacy</a> | 
+      <a href="#">Terms</a> | 
+      <a href="#">Contact</a>
+    </div>
+  </footer>
+
+  <!-- PAGE JS -->
   <script src="admin/js/config.js"></script>
   <script src="js/sidepage.js"></script>
 </body>

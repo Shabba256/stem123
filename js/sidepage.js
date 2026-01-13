@@ -1,11 +1,18 @@
+// ==============================
+// GLOBAL ELEMENTS
+// ==============================
 const content = document.getElementById("content");
 const searchInput = document.getElementById("quick-search");
 
+// Determine page type dynamically
 const PAGE_TYPE = window.location.pathname.includes("series") ? "Series" : "Movies";
-const PAGE_SIZE = 16;
+const PAGE_SIZE = 16;       // number of items per load
 let lastDoc = null;
 let isEnd = false;
 
+// ==============================
+// NOTIFICATIONS
+// ==============================
 function notify(msg, type = "info") {
   const n = document.createElement("div");
   n.className = `notification ${type}`;
@@ -14,20 +21,43 @@ function notify(msg, type = "info") {
   setTimeout(() => n.remove(), 3000);
 }
 
-function renderCard(movie) {
-  if (!movie.thumbnail) return ""; // skip if no poster
-
-  return `
-    <div class="card" data-title="${movie.title}" onclick="openMovie('${movie.id}')">
-      <img src="${movie.thumbnail}" alt="${movie.title}" loading="lazy" />
-    </div>
-  `;
-}
-
+// ==============================
+// OPEN MOVIE/SERIES PAGE
+// ==============================
 function openMovie(id) {
   window.location.href = `movie.html?id=${id}`;
 }
 
+// ==============================
+// RENDER CARD (MODULAR)
+// ==============================
+function createCard(movie) {
+  if (!movie.thumbnail) return null; // skip if no poster
+
+  // Create card container
+  const card = document.createElement("div");
+  card.className = "card";
+  card.setAttribute("data-title", movie.title);
+  card.addEventListener("click", () => openMovie(movie.id));
+
+  // Poster wrapper
+  const posterWrap = document.createElement("div");
+  posterWrap.className = "poster-wrap";
+
+  const img = document.createElement("img");
+  img.src = movie.thumbnail;
+  img.alt = movie.title;
+  img.loading = "lazy";
+
+  posterWrap.appendChild(img);
+  card.appendChild(posterWrap);
+
+  return card;
+}
+
+// ==============================
+// LOAD MOVIES/SERIES
+// ==============================
 async function loadMovies() {
   if (isEnd) return;
 
@@ -38,51 +68,71 @@ async function loadMovies() {
 
   if (lastDoc) query = query.startAfter(lastDoc);
 
-  const snapshot = await query.get();
+  try {
+    const snapshot = await query.get();
 
-  if (snapshot.empty && !lastDoc) {
-    content.innerHTML = `<p style="padding:30px; font-size:18px; color:#bbb;">No titles available yet.</p>`;
-    return;
-  }
-
-  if (snapshot.size < PAGE_SIZE) isEnd = true;
-
-  let grid = document.querySelector(".list");
-  if (!grid) {
-    content.innerHTML = `
-      <div class="row">
-        <h2>${PAGE_TYPE}</h2>
-        <div class="list"></div>
-        <div class="load-more-wrapper">
-          <button id="loadMoreBtn">Load More</button>
-        </div>
-      </div>
-    `;
-    grid = document.querySelector(".list");
-    document.getElementById("loadMoreBtn").addEventListener("click", loadMovies);
-  }
-
-  snapshot.forEach(doc => {
-    const movie = doc.data();
-    movie.id = doc.id;
-    const html = renderCard(movie);
-    if (html) grid.insertAdjacentHTML("beforeend", html);
-  });
-
-  lastDoc = snapshot.docs[snapshot.docs.length - 1];
-
-  if (isEnd) {
-    const btn = document.getElementById("loadMoreBtn");
-    if (btn) {
-      btn.disabled = true;
-      btn.textContent = "You’ve reached the end";
+    if (snapshot.empty && !lastDoc) {
+      content.innerHTML = `<p style="padding:30px; font-size:18px; color:#bbb;">No titles available yet.</p>`;
+      return;
     }
+
+    if (snapshot.size < PAGE_SIZE) isEnd = true;
+
+    // Create row & grid if not exists
+    let grid = document.querySelector(".list");
+    if (!grid) {
+      const row = document.createElement("div");
+      row.className = "row";
+
+      const header = document.createElement("h2");
+      header.textContent = PAGE_TYPE;
+      row.appendChild(header);
+
+      grid = document.createElement("div");
+      grid.className = "list";
+      row.appendChild(grid);
+
+      const loadWrapper = document.createElement("div");
+      loadWrapper.className = "load-more-wrapper";
+
+      const loadBtn = document.createElement("button");
+      loadBtn.id = "loadMoreBtn";
+      loadBtn.textContent = "Load More";
+      loadBtn.addEventListener("click", loadMovies);
+
+      loadWrapper.appendChild(loadBtn);
+      row.appendChild(loadWrapper);
+
+      content.appendChild(row);
+    }
+
+    // Add cards
+    snapshot.forEach(doc => {
+      const movie = { ...doc.data(), id: doc.id };
+      const card = createCard(movie);
+      if (card) grid.appendChild(card);
+    });
+
+    lastDoc = snapshot.docs[snapshot.docs.length - 1];
+
+    // Disable button if end reached
+    if (isEnd) {
+      const btn = document.getElementById("loadMoreBtn");
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = "You’ve reached the end";
+      }
+    }
+
+  } catch (err) {
+    console.error("Error loading movies/series:", err);
+    notify("Failed to load titles", "error");
   }
 }
 
-// ------------------------------
-// SEARCH (CLIENT SIDE)
-// ------------------------------
+// ==============================
+// CLIENT-SIDE SEARCH
+// ==============================
 searchInput.addEventListener("input", () => {
   const filter = searchInput.value.toLowerCase();
   document.querySelectorAll(".card").forEach(card => {
@@ -91,7 +141,7 @@ searchInput.addEventListener("input", () => {
   });
 });
 
-// ------------------------------
-// INIT
-// ------------------------------
+// ==============================
+// INITIALIZE PAGE
+// ==============================
 loadMovies();
